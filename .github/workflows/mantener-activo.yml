@@ -1,0 +1,14 @@
+name: Mantener el servidor despierto
+
+# el plan gratis de Render se duerme tras 15 min sin visitas;
+# esto lo despierta cada 10 min para que las ofertas programadas salgan a tiempo
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsS --max-time 60 https://luna-ventas-api.onrender.com/actuator/health || true

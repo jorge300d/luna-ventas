@@ -1,19 +1,20 @@
-# Blueprint de Render para el backend. La base va en Neon (ver README).
+# Blueprint de Render para el backend. La base de datos está en Neon.
 services:
   - type: web
     name: luna-ventas-api
     runtime: docker
     rootDir: backend
     plan: free
+    region: virginia
     healthCheckPath: /actuator/health
     envVars:
-      - key: DB_URL
-        sync: false
-      - key: DB_USER
-        sync: false
-      - key: DB_PASSWORD
+      # pegar la "connection string" de Neon tal cual (postgresql://...)
+      - key: DATABASE_URL
         sync: false
       - key: CORS_ORIGINS
-        sync: false
+        value: https://lunaventas.vercel.app,https://jorge300d.github.io
+      - key: SITIO_URL
+        value: https://lunaventas.vercel.app
+      # clave del panel; Render la genera sola
       - key: ADMIN_KEY
         generateValue: true
