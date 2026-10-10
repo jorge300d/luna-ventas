@@ -103,10 +103,10 @@ public class WebhookController {
 
             String respuesta = null;
             if (ALTA.contains(texto)) {
-                clienteService.aceptar(cliente);
+                clienteService.aceptar(cliente, "whatsapp", "Respondió OFERTAS por WhatsApp");
                 respuesta = "Listo, ya estás en la lista de ofertas de Luna Ventas. Si en algún momento no quieres recibirlas, responde BAJA.";
             } else if (BAJA.contains(texto)) {
-                clienteService.darDeBaja(cliente);
+                clienteService.darDeBaja(cliente, "whatsapp", "Respondió BAJA por WhatsApp");
                 respuesta = "Hecho, ya no te enviaremos ofertas. Si cambias de opinión, responde OFERTAS.";
             } else if (nuevo) {
                 respuesta = "¡Hola! Gracias por escribir a Luna Ventas. En un momento te atendemos. "

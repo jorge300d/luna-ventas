@@ -31,7 +31,7 @@ public class ContactoController {
         c.setNombre(req.nombre().trim());
         c.setTelefono(req.telefono());
         c.setMensaje(req.mensaje().trim());
-        Cliente cliente = clientes.registrar(req.nombre(), req.telefono(), null, "web_contacto", req.aceptaOfertas());
+        Cliente cliente = clientes.registrarDesdeWeb(req.nombre(), req.telefono(), null, "web_contacto", req.aceptaOfertas());
         if (cliente != null) c.setClienteId(cliente.getId());
         return Map.of("id", repo.save(c).getId());
     }

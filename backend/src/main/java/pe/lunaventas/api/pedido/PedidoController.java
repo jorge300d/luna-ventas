@@ -64,7 +64,7 @@ public class PedidoController {
         pedido.setTotal(total);
 
         // el cliente queda guardado; solo recibe ofertas si marcó la casilla
-        Cliente cliente = clientes.registrar(req.cliente(), req.telefono(), req.distrito(), "web_pedido", req.aceptaOfertas());
+        Cliente cliente = clientes.registrarDesdeWeb(req.cliente(), req.telefono(), req.distrito(), "web_pedido", req.aceptaOfertas());
         if (cliente != null) {
             pedido.setClienteId(cliente.getId());
             clientes.sumarCompra(cliente, total, categorias);

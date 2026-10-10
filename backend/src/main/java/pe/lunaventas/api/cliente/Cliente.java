@@ -40,6 +40,11 @@ public class Cliente {
     @Column(name = "ultimo_contacto")
     private OffsetDateTime ultimoContacto;
 
+    @Column(name = "acepta_politica_en")
+    private OffsetDateTime aceptaPoliticaEn;
+
+    private boolean eliminado;
+
     @Column(name = "creado_en", insertable = false, updatable = false)
     private OffsetDateTime creadoEn;
 
@@ -54,6 +59,21 @@ public class Cliente {
     public void darDeBaja() {
         aceptaOfertas = false;
         bajaEn = OffsetDateTime.now();
+    }
+
+    public void aceptarPolitica() {
+        aceptaPoliticaEn = OffsetDateTime.now();
+    }
+
+    // supresión: se borran los datos que identifican a la persona y queda solo el registro contable
+    public void anonimizar() {
+        nombre = null;
+        telefono = "eliminado-" + id;
+        distrito = null;
+        intereses = "";
+        aceptaOfertas = false;
+        bajaEn = OffsetDateTime.now();
+        eliminado = true;
     }
 
     public void agregarInteres(String categoria) {
@@ -86,5 +106,7 @@ public class Cliente {
     public void setTotalGastado(BigDecimal totalGastado) { this.totalGastado = totalGastado; }
     public OffsetDateTime getUltimoContacto() { return ultimoContacto; }
     public void setUltimoContacto(OffsetDateTime ultimoContacto) { this.ultimoContacto = ultimoContacto; }
+    public OffsetDateTime getAceptaPoliticaEn() { return aceptaPoliticaEn; }
+    public boolean isEliminado() { return eliminado; }
     public OffsetDateTime getCreadoEn() { return creadoEn; }
 }

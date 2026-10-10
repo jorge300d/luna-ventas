@@ -35,7 +35,7 @@ class ClientesYCampanasTest {
     @Test
     void elPedidoGuardaAlClienteConSuConsentimiento() throws Exception {
         String body = """
-            {"cliente":"Carla Ruiz","telefono":"987 111 222","distrito":"Lince","entrega":"tienda",
+            {"cliente":"Carla Ruiz","telefono":"987 111 222","distrito":"Lince","entrega":"tienda","aceptaPolitica":true,
              "aceptaOfertas":true,"items":[{"productoId":4,"talla":"M","cantidad":1}]}
             """;
         mvc.perform(post("/api/pedidos").contentType(MediaType.APPLICATION_JSON).content(body))
@@ -49,7 +49,7 @@ class ClientesYCampanasTest {
     @Test
     void sinCasillaQuedaGuardadoPeroSinOfertas() throws Exception {
         mvc.perform(post("/api/contactos").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Luis\",\"telefono\":\"955000111\",\"mensaje\":\"Hola\"}"))
+                        .content("{\"nombre\":\"Luis\",\"telefono\":\"955000111\",\"mensaje\":\"Hola\",\"aceptaPolitica\":true}"))
                 .andExpect(status().isCreated());
         assertThat(clientes.findByTelefono("51955000111").orElseThrow().isAceptaOfertas()).isFalse();
     }

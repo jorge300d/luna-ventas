@@ -6,7 +6,7 @@ import java.util.Optional;
 
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     Optional<Cliente> findByTelefono(String telefono);
-    List<Cliente> findAllByOrderByUltimoContactoDesc();
-    List<Cliente> findByAceptaOfertasTrue();
+    List<Cliente> findByEliminadoFalseOrderByUltimoContactoDesc();
+    List<Cliente> findByAceptaOfertasTrueAndEliminadoFalse();
     long countByAceptaOfertasTrue();
 }

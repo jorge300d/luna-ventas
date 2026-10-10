@@ -20,6 +20,15 @@ spring:
     enabled: true
   jackson:
     default-property-inclusion: non_null
+  # correo para la constancia del Libro de Reclamaciones (ej. Gmail con contraseña de aplicación)
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USER:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
 
 app:
   # separar varios con coma
@@ -27,6 +36,12 @@ app:
   admin-key: ${ADMIN_KEY:}
   sitio-url: ${SITIO_URL:https://lunaventas.vercel.app}
   ofertas-auto: ${OFERTAS_AUTO:true}
+  politica-version: "2026-10"
+  proveedor-nombre: ${PROVEEDOR_NOMBRE:Luna Ventas}
+  proveedor-ruc: ${PROVEEDOR_RUC:}
+  proveedor-domicilio: ${PROVEEDOR_DOMICILIO:}
+  correo-remitente: ${MAIL_USER:}
+  correo-negocio: ${CORREO_NEGOCIO:}
 
 # se llena cuando se conecte la API de WhatsApp de Meta; vacío = modo gratis (links manuales)
 whatsapp:
@@ -40,6 +55,9 @@ whatsapp:
   idioma: ${WA_IDIOMA:es}
 
 management:
+  health:
+    mail:
+      enabled: false
   endpoints:
     web:
       exposure:

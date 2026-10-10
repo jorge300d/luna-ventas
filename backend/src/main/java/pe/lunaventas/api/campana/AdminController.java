@@ -34,10 +34,16 @@ public class AdminController {
     private final CampanaService campanaService;
     private final PedidoRepository pedidos;
     private final WhatsappService whatsapp;
+    private final pe.lunaventas.api.contacto.ContactoRepository contactos;
+    private final pe.lunaventas.api.legal.ConsentimientoRepository consentimientos;
 
     public AdminController(AdminGuard admin, ClienteRepository clientes, ClienteService clienteService,
                            CampanaRepository campanas, CampanaService campanaService,
-                           PedidoRepository pedidos, WhatsappService whatsapp) {
+                           PedidoRepository pedidos, WhatsappService whatsapp,
+                           pe.lunaventas.api.contacto.ContactoRepository contactos,
+                           pe.lunaventas.api.legal.ConsentimientoRepository consentimientos) {
+        this.contactos = contactos;
+        this.consentimientos = consentimientos;
         this.admin = admin;
         this.clientes = clientes;
         this.clienteService = clienteService;
@@ -52,7 +58,8 @@ public class AdminController {
     public record NuevaCampana(@NotBlank @Size(max = 120) String titulo,
                                @NotBlank @Size(max = 700) String mensaje,
                                @Pattern(regexp = "|blusas|vestidos|pantalones|conjuntos|casacas") String categoria,
-                               OffsetDateTime programadaEn) {}
+                               OffsetDateTime programadaEn,
+                               java.time.LocalDate validoHasta) {}
 
     @GetMapping("/resumen")
     public Map<String, Object> resumen(@RequestHeader(value = "X-Admin-Key", required = false) String clave) {
@@ -73,14 +80,14 @@ public class AdminController {
     @GetMapping("/clientes")
     public List<ClienteDto> listarClientes(@RequestHeader(value = "X-Admin-Key", required = false) String clave) {
         admin.verificar(clave);
-        return clientes.findAllByOrderByUltimoContactoDesc().stream().map(ClienteDto::de).toList();
+        return clientes.findByEliminadoFalseOrderByUltimoContactoDesc().stream().map(ClienteDto::de).toList();
     }
 
     @GetMapping(value = "/clientes.csv")
     public ResponseEntity<byte[]> exportar(@RequestHeader(value = "X-Admin-Key", required = false) String clave) {
         admin.verificar(clave);
         StringBuilder sb = new StringBuilder("﻿nombre,telefono,distrito,origen,acepta_ofertas,intereses,pedidos,total_gastado\n");
-        for (Cliente c : clientes.findAllByOrderByUltimoContactoDesc()) {
+        for (Cliente c : clientes.findByEliminadoFalseOrderByUltimoContactoDesc()) {
             sb.append(csv(c.getNombre())).append(',').append(c.getTelefono()).append(',')
               .append(csv(c.getDistrito())).append(',').append(c.getOrigen()).append(',')
               .append(c.isAceptaOfertas() ? "si" : "no").append(',').append(csv(c.getIntereses())).append(',')
@@ -98,8 +105,9 @@ public class AdminController {
     public ClienteDto agregarCliente(@RequestHeader(value = "X-Admin-Key", required = false) String clave,
                                      @Valid @RequestBody NuevoCliente req) {
         admin.verificar(clave);
-        Cliente c = clienteService.registrar(req.nombre(), req.telefono(), null, "manual", req.aceptaOfertas());
+        Cliente c = clienteService.registrar(req.nombre(), req.telefono(), null, "manual", false);
         if (c == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El celular no es válido");
+        if (req.aceptaOfertas()) clienteService.aceptar(c, "panel", "Consentimiento obtenido por el negocio (tienda o chat) y registrado en el panel");
         return ClienteDto.de(c);
     }
 
@@ -108,9 +116,38 @@ public class AdminController {
                                            @PathVariable Long id, @RequestBody Map<String, Boolean> body) {
         admin.verificar(clave);
         Cliente c = clientes.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado"));
-        if (Boolean.TRUE.equals(body.get("acepta"))) clienteService.aceptar(c);
-        else clienteService.darDeBaja(c);
+        if (Boolean.TRUE.equals(body.get("acepta"))) clienteService.aceptar(c, "panel", "Consentimiento registrado manualmente en el panel");
+        else clienteService.darDeBaja(c, "panel", "Retiro de consentimiento registrado en el panel");
         return ClienteDto.de(c);
+    }
+
+    // derecho de acceso / portabilidad: todo lo que se guarda de una persona
+    @GetMapping("/clientes/{id}/datos")
+    public Map<String, Object> datosCliente(@RequestHeader(value = "X-Admin-Key", required = false) String clave,
+                                            @PathVariable Long id) {
+        admin.verificar(clave);
+        Cliente c = clientes.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado"));
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("cliente", ClienteDto.de(c));
+        m.put("pedidos", pedidos.findByClienteIdOrderByIdAsc(id));
+        m.put("mensajes", contactos.findByClienteIdOrderByIdAsc(id));
+        m.put("consentimientos", consentimientos.findByClienteIdOrderByIdAsc(id));
+        m.put("generadoEn", OffsetDateTime.now());
+        return m;
+    }
+
+    // derecho de cancelación (supresión): se anonimiza a la persona en clientes, pedidos y mensajes
+    @DeleteMapping("/clientes/{id}")
+    @org.springframework.transaction.annotation.Transactional
+    public ResponseEntity<Void> eliminarCliente(@RequestHeader(value = "X-Admin-Key", required = false) String clave,
+                                                @PathVariable Long id) {
+        admin.verificar(clave);
+        Cliente c = clientes.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado"));
+        c.anonimizar();
+        clientes.save(c);
+        pedidos.anonimizar(id);
+        contactos.anonimizar(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/campanas")
@@ -126,6 +163,7 @@ public class AdminController {
             m.put("automatica", c.isAutomatica());
             m.put("programadaEn", c.getProgramadaEn());
             m.put("enviadaEn", c.getEnviadaEn());
+            m.put("validoHasta", c.getValidoHasta());
             m.put("destinatarios", campanaService.destinatarios(c).size());
             m.putAll(campanaService.conteo(c.getId()));
             return m;
@@ -137,7 +175,7 @@ public class AdminController {
     public Campana crearCampana(@RequestHeader(value = "X-Admin-Key", required = false) String clave,
                                 @Valid @RequestBody NuevaCampana req) {
         admin.verificar(clave);
-        return campanaService.crear(req.titulo(), req.mensaje(), req.categoria(), req.programadaEn(), false);
+        return campanaService.crear(req.titulo(), req.mensaje(), req.categoria(), req.programadaEn(), false, req.validoHasta());
     }
 
     @PostMapping("/campanas/{id}/enviar")

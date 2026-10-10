@@ -10,7 +10,8 @@ public record PedidoRequest(
         @Size(max = 80) String distrito,
         @NotBlank @Pattern(regexp = "tienda|delivery") String entrega,
         @NotEmpty @Size(max = 30) List<@Valid Item> items,
-        boolean aceptaOfertas
+        boolean aceptaOfertas,
+        @AssertTrue(message = "Debes aceptar la Política de Privacidad y los Términos") boolean aceptaPolitica
 ) {
     public record Item(
             @NotNull Long productoId,

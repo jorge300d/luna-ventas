@@ -30,7 +30,7 @@ class ApiTest {
     void elTotalSeCalculaConPreciosDeLaBase() throws Exception {
         // producto 1 cuesta 35, se piden 2
         String body = """
-            {"cliente":"Rosa","telefono":"999888777","distrito":"Lince","entrega":"tienda",
+            {"cliente":"Rosa","telefono":"999888777","distrito":"Lince","entrega":"tienda","aceptaPolitica":true,
              "items":[{"productoId":1,"talla":"M","cantidad":2}]}
             """;
         mvc.perform(post("/api/pedidos").contentType(MediaType.APPLICATION_JSON).content(body))
@@ -41,7 +41,7 @@ class ApiTest {
     @Test
     void rechazaTallaQueNoExiste() throws Exception {
         String body = """
-            {"cliente":"Rosa","entrega":"tienda","items":[{"productoId":1,"talla":"XXL","cantidad":1}]}
+            {"cliente":"Rosa","entrega":"tienda","aceptaPolitica":true,"items":[{"productoId":1,"talla":"XXL","cantidad":1}]}
             """;
         mvc.perform(post("/api/pedidos").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isBadRequest());
@@ -56,7 +56,7 @@ class ApiTest {
     @Test
     void guardaContacto() throws Exception {
         mvc.perform(post("/api/contactos").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Ana\",\"mensaje\":\"Busco vestido talla M\"}"))
+                        .content("{\"nombre\":\"Ana\",\"mensaje\":\"Busco vestido talla M\",\"aceptaPolitica\":true}"))
                 .andExpect(status().isCreated());
     }
 }

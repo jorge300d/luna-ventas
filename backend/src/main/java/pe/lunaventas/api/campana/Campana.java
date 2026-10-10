@@ -23,6 +23,9 @@ public class Campana {
     @Column(name = "enviada_en")
     private OffsetDateTime enviadaEn;
 
+    @Column(name = "valido_hasta")
+    private java.time.LocalDate validoHasta;
+
     @Column(name = "creado_en", insertable = false, updatable = false)
     private OffsetDateTime creadoEn;
 
@@ -41,5 +44,7 @@ public class Campana {
     public void setProgramadaEn(OffsetDateTime programadaEn) { this.programadaEn = programadaEn; }
     public OffsetDateTime getEnviadaEn() { return enviadaEn; }
     public void setEnviadaEn(OffsetDateTime enviadaEn) { this.enviadaEn = enviadaEn; }
+    public java.time.LocalDate getValidoHasta() { return validoHasta; }
+    public void setValidoHasta(java.time.LocalDate validoHasta) { this.validoHasta = validoHasta; }
     public OffsetDateTime getCreadoEn() { return creadoEn; }
 }

@@ -49,7 +49,14 @@ public class CampanaService {
 
     @Transactional
     public Campana crear(String titulo, String mensaje, String categoria, OffsetDateTime programadaEn, boolean automatica) {
+        return crear(titulo, mensaje, categoria, programadaEn, automatica, null);
+    }
+
+    @Transactional
+    public Campana crear(String titulo, String mensaje, String categoria, OffsetDateTime programadaEn, boolean automatica,
+                         java.time.LocalDate validoHasta) {
         Campana c = new Campana();
+        c.setValidoHasta(validoHasta);
         c.setTitulo(titulo.trim());
         c.setMensaje(mensaje.trim());
         c.setCategoria(categoria == null || categoria.isBlank() ? null : categoria);
@@ -63,14 +70,25 @@ public class CampanaService {
 
     // a quiénes les llega: solo los que aceptaron y, si hay categoría, los que compraron esa categoría
     public List<Cliente> destinatarios(Campana c) {
-        return clientes.findByAceptaOfertasTrue().stream()
+        return clientes.findByAceptaOfertasTrueAndEliminadoFalse().stream()
                 .filter(cl -> cl.tieneInteres(c.getCategoria()))
                 .toList();
     }
 
     public String textoPara(Campana c, Cliente cl) {
         String nombre = cl.getNombre() == null || cl.getNombre().isBlank() ? "" : " " + primerNombre(cl.getNombre());
-        return "Hola" + nombre + ", " + c.getMensaje() + "\n\n" + PIE;
+        return "Hola" + nombre + ", " + cuerpo(c) + "\n\n" + PIE;
+    }
+
+    // el mensaje de la oferta más su vigencia
+    public String cuerpo(Campana c) {
+        String m = c.getMensaje().trim();
+        if (c.getValidoHasta() != null) {
+            m += " Válido hasta el " + c.getValidoHasta().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " o hasta agotar stock.";
+        } else if (!m.toLowerCase().contains("agotar stock")) {
+            m += " Hasta agotar stock.";
+        }
+        return m;
     }
 
     @Transactional
@@ -94,7 +112,7 @@ public class CampanaService {
             }
             if (api) {
                 try {
-                    String wamid = whatsapp.enviarPlantilla(cl.getTelefono(), primerNombre(cl.getNombre()), c.getMensaje());
+                    String wamid = whatsapp.enviarPlantilla(cl.getTelefono(), primerNombre(cl.getNombre()), cuerpo(c));
                     e.setWaMessageId(wamid);
                     e.setEstado("enviado");
                     e.setError(null);
