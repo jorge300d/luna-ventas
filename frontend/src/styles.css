@@ -29,7 +29,13 @@ button { font-family: inherit; }
 .btn-dark { background: var(--tinta); color: #fff; }
 .btn-dark:hover:not(:disabled) { box-shadow: 0 14px 28px -14px rgba(59, 42, 63, .7); }
 .btn-ghost { background: var(--blanco); color: var(--tinta); border-color: var(--linea); }
-.btn-wa { background: #25D366; color: #08361b; }
+.btn-wa { position: relative; overflow: hidden; background: linear-gradient(135deg, #2BE374 0%, #12B04A 55%, #0B8F3A 100%); color: #fff; font-weight: 700; letter-spacing: .01em; text-shadow: 0 1px 1px rgba(0, 60, 20, .35); box-shadow: 0 10px 24px -8px rgba(18, 176, 74, .75), inset 0 1px 0 rgba(255, 255, 255, .35); }
+.btn-wa::after { content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .45), transparent); transform: skewX(-20deg); animation: brillo-wa 3.2s ease-in-out infinite; }
+.btn-wa:hover:not(:disabled) { box-shadow: 0 16px 30px -8px rgba(18, 176, 74, .9), inset 0 1px 0 rgba(255, 255, 255, .35); }
+.btn-wa:disabled { opacity: .72; }
+.btn-wa:disabled::after { display: none; }
+.wa-ico { flex: none; }
+@keyframes brillo-wa { 0%, 60% { left: -60%; } 100% { left: 130%; } }
 
 :focus-visible { outline: 2px solid var(--rosa-fuerte); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
