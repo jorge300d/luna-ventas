@@ -27,10 +27,14 @@ import { linkWhatsapp } from '../site.config';
         <textarea name="mensaje" rows="3" [(ngModel)]="mensaje" placeholder="Talla, color, ocasión…"></textarea>
       </label>
       <label class="acepto">
-        <input type="checkbox" name="ofertas" [(ngModel)]="aceptaOfertas" />
-        <span>Quiero recibir ofertas y novedades por WhatsApp. Puedo darme de baja respondiendo BAJA.</span>
+        <input type="checkbox" name="politica" [(ngModel)]="aceptaPolitica" />
+        <span>He leído y acepto la <a href="privacidad" target="_blank" rel="noopener">Política de Privacidad</a> y los <a href="terminos" target="_blank" rel="noopener">Términos y Condiciones</a>, incluido el envío de mis datos a los proveedores tecnológicos indicados. *</span>
       </label>
-      <button class="btn btn-wa" type="submit" [disabled]="!nombre.trim()"><svg class="wa-ico" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.6 1.1 2.7c.1.2 1.9 2.9 4.6 4 1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.4-.2Z"/></svg>Enviar por WhatsApp</button>
+      <label class="acepto">
+        <input type="checkbox" name="ofertas" [(ngModel)]="aceptaOfertas" />
+        <span>Opcional: quiero recibir ofertas y novedades de Luna Ventas por WhatsApp. No es necesario para comprar y puedo darme de baja respondiendo BAJA.</span>
+      </label>
+      <button class="btn btn-wa" type="submit" [disabled]="!nombre.trim() || !aceptaPolitica"><svg class="wa-ico" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.6 1.1 2.7c.1.2 1.9 2.9 4.6 4 1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.4-.2Z"/></svg>Enviar por WhatsApp</button>
     </form>
   `,
   styles: [`
@@ -45,6 +49,7 @@ import { linkWhatsapp } from '../site.config';
     .op.on { background: var(--tinta); color: #fff; border-color: var(--tinta); }
     .btn { justify-content: center; }
     .acepto { flex-direction: row; align-items: flex-start; gap: 8px; font-weight: 400; font-size: 13px; color: var(--suave); line-height: 1.4; }
+    .acepto a { color: var(--tinta); }
     .acepto input { margin-top: 2px; accent-color: var(--rosa-fuerte); width: 16px; height: 16px; flex: none; }
   `],
 })
@@ -56,12 +61,13 @@ export class ContactoComponent {
   interes = this.opciones[0];
   mensaje = '';
   aceptaOfertas = false;
+  aceptaPolitica = false;
 
   enviar() {
-    if (!this.nombre.trim()) return;
+    if (!this.nombre.trim() || !this.aceptaPolitica) return;
     const texto = `Hola Luna Ventas, soy ${this.nombre.trim()}. Me interesa: ${this.interes}.${this.mensaje ? ' ' + this.mensaje.trim() : ''}`;
     // se guarda en la base para tener registro, y se abre WhatsApp igual
-    this.api.enviarContacto({ nombre: this.nombre.trim(), telefono: this.telefono.trim(), mensaje: texto, aceptaOfertas: this.aceptaOfertas && !!this.telefono.trim() }).subscribe();
+    this.api.enviarContacto({ nombre: this.nombre.trim(), telefono: this.telefono.trim(), mensaje: texto, aceptaOfertas: this.aceptaOfertas && !!this.telefono.trim(), aceptaPolitica: true }).subscribe();
     window.open(linkWhatsapp(texto), '_blank');
   }
 }

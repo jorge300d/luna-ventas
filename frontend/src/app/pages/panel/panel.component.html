@@ -21,6 +21,7 @@
         <button [class.on]="pestana() === 'ofertas'" (click)="ir('ofertas')">Ofertas</button>
         <button [class.on]="pestana() === 'pedidos'" (click)="ir('pedidos')">Pedidos</button>
         <button [class.on]="pestana() === 'prendas'" (click)="ir('prendas')">Prendas</button>
+        <button [class.on]="pestana() === 'reclamos'" (click)="ir('reclamos')">Reclamos @if (pendientesLegales()) { <span class="cnt">{{ pendientesLegales() }}</span> }</button>
       </nav>
       <button class="salir" (click)="salir()">Salir</button>
     </header>
@@ -38,6 +39,20 @@
             <div><span>Pedidos web</span><strong>{{ r.pedidos }}</strong></div>
             <div><span>Ventas web</span><strong>S/ {{ r.ventas | number:'1.0-2' }}</strong></div>
           </section>
+
+          @if (pendientesLegales()) {
+            <section class="bloque alerta">
+              <h2>Tienes {{ pendientesLegales() }} reclamo(s) o solicitud(es) por responder</h2>
+              <p>La ley da 15 días hábiles para responder un reclamo. Revísalos en la pestaña Reclamos.</p>
+              <button class="btn btn-dark chico" (click)="ir('reclamos')">Ver reclamos</button>
+            </section>
+          }
+          @if (!correoOk()) {
+            <section class="bloque modo">
+              <h2>Falta configurar el correo</h2>
+              <p>El Libro de Reclamaciones debe enviar una copia de cada hoja al correo del consumidor. Hasta que se configure, la hoja se muestra en pantalla para imprimir y aquí te aparece cada reclamo para que respondas tú.</p>
+            </section>
+          }
 
           <section class="bloque modo" [class.activo]="r.whatsappConectado">
             <h2>Envío de ofertas: {{ r.whatsappConectado ? 'automático' : 'gratis (un clic por cliente)' }}</h2>
@@ -87,6 +102,16 @@
                       {{ c.aceptaOfertas ? 'Recibe ofertas' : 'Sin ofertas' }}
                     </button>
                     <a class="btn btn-wa chico" [href]="linkCliente(c)" target="_blank" rel="noopener">WhatsApp</a>
+                  </div>
+                  <div class="acc legal">
+                    <button class="link" (click)="descargarDatos(c)">Descargar sus datos</button>
+                    @if (confirmarBorrado() === c.id) {
+                      <span class="confirma">¿Eliminar sus datos? No se puede deshacer.
+                        <button class="link rojo" (click)="eliminarCliente(c)">Sí, eliminar</button>
+                        <button class="link" (click)="confirmarBorrado.set(null)">Cancelar</button></span>
+                    } @else {
+                      <button class="link" (click)="confirmarBorrado.set(c.id)">Eliminar sus datos</button>
+                    }
                   </div>
                 </article>
               } @empty { <p class="vacio">Aquí aparecen quienes compran o escriben desde la web, y quienes te escriben por WhatsApp cuando conectes la API.</p> }
@@ -145,6 +170,10 @@
                   <input name="pr" type="datetime-local" [(ngModel)]="nuevaCampana.programadaEn" />
                 </label>
               </div>
+              <label>Válido hasta (la ley pide indicar la vigencia de toda promoción)
+                <input name="vh" type="date" [(ngModel)]="nuevaCampana.validoHasta" />
+              </label>
+              <p class="ayuda">Si pones un precio «antes», tiene que ser el precio real al que vendiste la prenda. Si no pones fecha, se agrega «Hasta agotar stock».</p>
               <div class="previa">
                 <span>Así le llega a cada cliente ({{ destinatariosNueva() }} personas):</span>
                 <p>{{ vistaPrevia() }}</p>
@@ -202,6 +231,53 @@
                 <strong class="tot">Total S/ {{ p.total | number:'1.0-2' }}</strong>
               </article>
             } @empty { <p class="vacio">Todavía no hay pedidos desde la web.</p> }
+          </section>
+        }
+
+        @case ('reclamos') {
+          <section class="bloque">
+            <h2>Libro de Reclamaciones</h2>
+            <p class="ayuda">Responde cada reclamo o queja en un máximo de 15 días hábiles. Guarda las hojas al menos 2 años; aquí quedan registradas. Si hay feriados, el plazo se alarga esos días.</p>
+            @for (r of reclamos(); track r.id) {
+              @let p = diasHabilesRestantes(r);
+              <article class="reclamo" [class.vencido]="r.estado === 'pendiente' && p.restantes < 0">
+                <div class="cab">
+                  <strong>{{ r.numero }} · {{ r.tipo === 'reclamo' ? 'Reclamo' : 'Queja' }}</strong>
+                  @if (r.estado === 'respondido') { <span class="chip" data-e="confirmado">Respondido</span> }
+                  @else if (p.restantes < 0) { <span class="chip" data-e="cancelado">Plazo vencido</span> }
+                  @else { <span class="chip" data-e="pendiente">Quedan {{ p.restantes }} días hábiles</span> }
+                </div>
+                <span class="sub">{{ r.creadoEn | date:'d MMM y, HH:mm' }} · {{ r.nombre }} · {{ r.tipoDocumento }} {{ r.numeroDocumento }} · {{ r.correo }} @if (r.telefono) { · {{ r.telefono }} }</span>
+                <span class="sub">{{ r.bienTipo }}: {{ r.descripcionBien }} @if (r.monto) { · S/ {{ r.monto }} }</span>
+                <p><strong>Detalle:</strong> {{ r.detalle }}</p>
+                <p><strong>Pide:</strong> {{ r.pedido }}</p>
+                @if (r.estado === 'respondido') {
+                  <p class="resp"><strong>Respuesta ({{ r.respondidoEn | date:'d MMM y' }}):</strong> {{ r.respuesta }}</p>
+                } @else {
+                  <textarea rows="3" [(ngModel)]="respuestas[r.id]" [name]="'resp' + r.id" placeholder="Escribe la respuesta para el consumidor"></textarea>
+                  <button class="btn btn-dark chico" (click)="responderReclamo(r)">Registrar respuesta</button>
+                }
+              </article>
+            } @empty { <p class="vacio">No hay reclamos registrados.</p> }
+          </section>
+
+          <section class="bloque">
+            <h2>Solicitudes sobre datos personales</h2>
+            <p class="ayuda">Para cancelación, usa «Eliminar sus datos» en la pestaña Clientes; para acceso o portabilidad, «Descargar sus datos» y envíaselos. Luego márcala como atendida.</p>
+            @for (s of solicitudes(); track s.id) {
+              <article class="reclamo">
+                <div class="cab">
+                  <strong>#{{ s.id }} · {{ s.tipo }}</strong>
+                  <span class="chip" [attr.data-e]="s.estado === 'atendida' ? 'confirmado' : 'pendiente'">{{ s.estado }}</span>
+                </div>
+                <span class="sub">{{ s.creadoEn | date:'d MMM y, HH:mm' }} · {{ s.nombre }} · Doc. {{ s.numeroDocumento }} @if (s.telefono) { · {{ s.telefono }} } @if (s.correo) { · {{ s.correo }} }</span>
+                <p>{{ s.detalle }}</p>
+                @if (s.estado === 'pendiente') {
+                  <input [(ngModel)]="notas[s.id]" [name]="'nota' + s.id" placeholder="Nota de lo que hiciste (opcional)" />
+                  <button class="btn btn-dark chico" (click)="atenderSolicitud(s)">Marcar como atendida</button>
+                } @else if (s.nota) { <p class="resp">{{ s.nota }}</p> }
+              </article>
+            } @empty { <p class="vacio">No hay solicitudes.</p> }
           </section>
         }
 

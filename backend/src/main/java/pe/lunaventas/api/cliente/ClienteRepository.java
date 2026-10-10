@@ -9,4 +9,5 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     List<Cliente> findByEliminadoFalseOrderByUltimoContactoDesc();
     List<Cliente> findByAceptaOfertasTrueAndEliminadoFalse();
     long countByAceptaOfertasTrue();
+    List<Cliente> findByEliminadoFalseAndUltimoContactoBefore(java.time.OffsetDateTime limite);
 }

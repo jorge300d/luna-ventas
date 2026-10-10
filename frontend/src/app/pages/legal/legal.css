@@ -1,0 +1,19 @@
+:host { display: block; background: #FFFBF5; min-height: 100dvh; }
+.cab { display: flex; justify-content: space-between; align-items: center; gap: 12px; max-width: 860px; margin: 0 auto; padding: 18px 16px; }
+.marca { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--tinta); font: 600 19px var(--serif); }
+.volver { color: var(--suave); font-size: 14px; }
+.doc { max-width: 760px; margin: 0 auto; padding: 16px 16px 64px; color: var(--tinta); }
+.pre { margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--rosa-fuerte); }
+h1 { font: 600 clamp(30px, 5vw, 44px)/1.1 var(--serif); margin: 8px 0 10px; text-wrap: balance; }
+.sub { color: var(--suave); margin: 0 0 30px; font-size: 15px; }
+:host ::ng-deep .doc h2 { font: 600 22px/1.25 var(--serif); margin: 34px 0 10px; }
+:host ::ng-deep .doc h3 { font: 600 16px var(--sans); margin: 20px 0 6px; }
+:host ::ng-deep .doc p, :host ::ng-deep .doc li { font-size: 15.5px; line-height: 1.65; }
+:host ::ng-deep .doc ul, :host ::ng-deep .doc ol { padding-left: 22px; }
+:host ::ng-deep .doc li { margin: 4px 0; }
+:host ::ng-deep .doc table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+:host ::ng-deep .doc th, :host ::ng-deep .doc td { text-align: left; border-bottom: 1px solid var(--linea); padding: 9px 8px; vertical-align: top; }
+:host ::ng-deep .doc th { background: var(--crema); font-weight: 600; }
+:host ::ng-deep .tabla { overflow-x: auto; }
+:host ::ng-deep .caja { background: var(--blanco); border: 1px solid var(--linea); border-radius: 20px; padding: 22px; margin: 18px 0; }
+:host ::ng-deep .nota { background: #FFF4D6; border-radius: 14px; padding: 12px 14px; font-size: 14px; }

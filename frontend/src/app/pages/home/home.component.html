@@ -129,7 +129,15 @@
         </dl>
       </div>
       <div class="mapa">
-        <iframe [src]="mapa" title="Mapa de Lince, Lima" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        @if (verMapa()) {
+          <iframe [src]="mapa" title="Mapa de Lince, Lima" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        } @else {
+          <div class="mapa-off">
+            <p>El mapa lo muestra Google. Al cargarlo, Google recibe datos de tu visita.</p>
+            <button class="btn btn-ghost" type="button" (click)="verMapa.set(true)">Cargar mapa</button>
+            <a [href]="site.mapaLink" target="_blank" rel="noopener">Abrir en Google Maps</a>
+          </div>
+        }
       </div>
     </div>
   </section>
@@ -147,17 +155,7 @@
   </section>
 </main>
 
-<footer class="pie">
-  <div class="wrap pie-in">
-    <a href="#inicio" class="marca"><app-logo [size]="40" /><span>Luna Ventas</span></a>
-    <p>© {{ anio }} Luna Ventas · {{ site.lema }}.</p>
-    <div class="redes">
-      <a [href]="site.facebook" target="_blank" rel="noopener">Facebook</a>
-      <a [href]="site.tiktok" target="_blank" rel="noopener">TikTok</a>
-      <a [href]="waGeneral" target="_blank" rel="noopener">WhatsApp</a>
-    </div>
-  </div>
-</footer>
+<app-pie-legal />
 
 <a class="wa-flot" [href]="waGeneral" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp">
   <span class="wa-flot-txt">Pide por WhatsApp</span>

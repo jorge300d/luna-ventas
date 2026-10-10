@@ -5,6 +5,7 @@ import { PrendaComponent } from '../../components/prenda.component';
 import { CatalogoComponent } from '../../components/catalogo.component';
 import { CarritoComponent } from '../../components/carrito.component';
 import { ContactoComponent } from '../../components/contacto.component';
+import { PieLegalComponent } from '../../components/pie-legal.component';
 import { CarritoService } from '../../services/carrito.service';
 import { CATEGORIAS, Categoria } from '../../models/producto';
 import { SITE, linkWhatsapp } from '../../site.config';
@@ -12,7 +13,7 @@ import { SITE, linkWhatsapp } from '../../site.config';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [LogoComponent, PrendaComponent, CatalogoComponent, CarritoComponent, ContactoComponent],
+  imports: [LogoComponent, PrendaComponent, CatalogoComponent, CarritoComponent, ContactoComponent, PieLegalComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
@@ -25,6 +26,8 @@ export class HomeComponent implements OnDestroy {
 
   waGeneral = linkWhatsapp('Hola Luna Ventas, vi su página web y quisiera información sobre sus prendas.');
   telLink = 'tel:+51' + SITE.telefono.replace(/ /g, '');
+  // el mapa de Google solo se carga si la persona lo pide (no se envían datos a Google antes)
+  verMapa = signal(false);
   menu = signal(false);
   scrolled = signal(false);
   anio = new Date().getFullYear();

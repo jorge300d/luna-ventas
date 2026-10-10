@@ -27,6 +27,7 @@ export interface PedidoRequest {
   distrito: string;
   entrega: 'tienda' | 'delivery';
   aceptaOfertas: boolean;
+  aceptaPolitica: boolean;
   items: { productoId: number; talla: string; cantidad: number }[];
 }
 

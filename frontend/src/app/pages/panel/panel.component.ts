@@ -3,11 +3,11 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-import { AdminService, Campana, Cliente, Pedido, ResultadoEnvio, Resumen } from '../../services/admin.service';
+import { AdminService, Campana, Cliente, Pedido, Reclamo, ResultadoEnvio, Resumen, SolicitudDatos } from '../../services/admin.service';
 import { CATEGORIAS, Categoria, Producto } from '../../models/producto';
 import { LogoComponent } from '../../components/logo.component';
 
-type Pestana = 'inicio' | 'clientes' | 'ofertas' | 'pedidos' | 'prendas';
+type Pestana = 'inicio' | 'clientes' | 'ofertas' | 'pedidos' | 'prendas' | 'reclamos';
 
 @Component({
   selector: 'app-panel',
@@ -32,6 +32,14 @@ export class PanelComponent {
   prendas = signal<Producto[]>([]);
   resultado = signal<ResultadoEnvio | null>(null);
   abiertos = signal<Set<number>>(new Set());
+  reclamos = signal<Reclamo[]>([]);
+  solicitudes = signal<SolicitudDatos[]>([]);
+  correoOk = signal(true);
+  respuestas: Record<number, string> = {};
+  notas: Record<number, string> = {};
+  confirmarBorrado = signal<number | null>(null);
+  pendientesLegales = computed(() =>
+    this.reclamos().filter(r => r.estado === 'pendiente').length + this.solicitudes().filter(s => s.estado === 'pendiente').length);
 
   // filtros de clientes
   buscar = signal('');
@@ -45,7 +53,7 @@ export class PanelComponent {
 
   claveInput = '';
   nuevoCliente = { nombre: '', telefono: '', aceptaOfertas: true };
-  nuevaCampana = { titulo: '', mensaje: '', categoria: '', programadaEn: '' };
+  nuevaCampana = { titulo: '', mensaje: '', categoria: '', programadaEn: '', validoHasta: '' };
   nuevaPrenda = this.prendaVacia();
 
   constructor() {
@@ -81,6 +89,81 @@ export class PanelComponent {
         this.cargarCampanas();
         this.cargarPedidos();
         this.cargarPrendas();
+        this.cargarLegal();
+      },
+      error: e => this.fallo(e),
+    });
+  }
+
+  cargarLegal() {
+    this.admin.reclamos().subscribe({ next: l => this.reclamos.set(l), error: e => this.fallo(e) });
+    this.admin.solicitudes().subscribe({ next: l => this.solicitudes.set(l), error: e => this.fallo(e) });
+    this.admin.correoConfigurado().subscribe({ next: r => this.correoOk.set(r.configurado) });
+  }
+
+  // ---- reclamos y derechos ----
+  // plazo legal: 15 días hábiles (no cuenta sábados ni domingos; los feriados hay que restarlos a mano)
+  diasHabilesRestantes(r: Reclamo) {
+    const inicio = new Date(r.creadoEn);
+    let limite = new Date(inicio);
+    let n = 0;
+    while (n < 15) {
+      limite.setDate(limite.getDate() + 1);
+      const d = limite.getDay();
+      if (d !== 0 && d !== 6) n++;
+    }
+    const hoy = new Date();
+    let restantes = 0;
+    const cursor = new Date(hoy);
+    while (cursor < limite) {
+      cursor.setDate(cursor.getDate() + 1);
+      const d = cursor.getDay();
+      if (d !== 0 && d !== 6) restantes++;
+    }
+    return { limite, restantes: hoy > limite ? -1 : restantes };
+  }
+
+  responderReclamo(r: Reclamo) {
+    const txt = (this.respuestas[r.id] || '').trim();
+    if (txt.length < 10) { this.error.set('Escribe la respuesta al consumidor.'); return; }
+    this.admin.responderReclamo(r.id, txt).subscribe({
+      next: act => {
+        this.reclamos.update(l => l.map(x => x.id === act.id ? act : x));
+        this.ok(this.correoOk() ? 'Respuesta registrada y enviada por correo.' : 'Respuesta registrada. Como el correo no está configurado, envíasela tú al consumidor y guarda la constancia.');
+      },
+      error: e => this.fallo(e),
+    });
+  }
+
+  atenderSolicitud(s: SolicitudDatos) {
+    this.admin.atenderSolicitud(s.id, this.notas[s.id] || '').subscribe({
+      next: act => this.solicitudes.update(l => l.map(x => x.id === act.id ? act : x)),
+      error: e => this.fallo(e),
+    });
+  }
+
+  descargarDatos(c: Cliente) {
+    this.admin.datosCliente(c.id).subscribe({
+      next: datos => {
+        const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `datos-cliente-${c.id}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: e => this.fallo(e),
+    });
+  }
+
+  eliminarCliente(c: Cliente) {
+    this.admin.eliminarCliente(c.id).subscribe({
+      next: () => {
+        this.confirmarBorrado.set(null);
+        this.clientes.update(l => l.filter(x => x.id !== c.id));
+        this.ok('Datos eliminados. Los pedidos quedan sin nombre ni celular, solo con los montos.');
+        this.refrescarResumen();
       },
       error: e => this.fallo(e),
     });
@@ -140,9 +223,9 @@ export class PanelComponent {
     const c = this.nuevaCampana;
     if (!c.titulo.trim() || !c.mensaje.trim()) return;
     const programadaEn = c.programadaEn ? new Date(c.programadaEn).toISOString() : null;
-    this.admin.crearCampana({ ...c, programadaEn }).subscribe({
+    this.admin.crearCampana({ ...c, programadaEn, validoHasta: c.validoHasta || null }).subscribe({
       next: () => {
-        this.nuevaCampana = { titulo: '', mensaje: '', categoria: '', programadaEn: '' };
+        this.nuevaCampana = { titulo: '', mensaje: '', categoria: '', programadaEn: '', validoHasta: '' };
         this.ok(programadaEn ? 'Oferta programada.' : 'Oferta guardada. Revisa a quiénes les llega y envíala.');
         this.cargarCampanas();
       },
@@ -175,7 +258,14 @@ export class PanelComponent {
   }
 
   vistaPrevia() {
-    const m = this.nuevaCampana.mensaje.trim() || 'escribe aquí tu oferta…';
+    let m = this.nuevaCampana.mensaje.trim() || 'escribe aquí tu oferta…';
+    const v = this.nuevaCampana.validoHasta;
+    if (v) {
+      const [y, mo, d] = v.split('-');
+      m += ` Válido hasta el ${d}/${mo}/${y} o hasta agotar stock.`;
+    } else if (!m.toLowerCase().includes('agotar stock')) {
+      m += ' Hasta agotar stock.';
+    }
     return `Hola Ana, ${m}\n\nResponde BAJA si no deseas recibir más ofertas.`;
   }
 

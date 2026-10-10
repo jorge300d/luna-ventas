@@ -52,6 +52,14 @@
               }
             ],
             "styles": [
+              "@fontsource/fraunces/500.css",
+              "@fontsource/fraunces/600.css",
+              "@fontsource/fraunces/500-italic.css",
+              "@fontsource/outfit/400.css",
+              "@fontsource/outfit/500.css",
+              "@fontsource/outfit/600.css",
+              "@fontsource/outfit/700.css",
+              "@fontsource/parisienne/400.css",
               "src/styles.css"
             ],
             "scripts": []

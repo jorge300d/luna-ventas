@@ -84,3 +84,18 @@ button.chip { cursor: pointer; margin: 0; }
   .top nav { order: 3; flex-basis: 100%; }
   .salir { margin-left: auto; }
 }
+
+.cnt { display: inline-grid; place-items: center; min-width: 18px; height: 18px; border-radius: 999px; background: var(--rosa-fuerte); color: #fff; font-size: 11px; margin-left: 4px; padding: 0 5px; }
+.alerta { border-left: 5px solid var(--rosa-fuerte); }
+.alerta p { margin: 0; color: var(--suave); font-size: 14px; }
+.alerta .btn { align-self: flex-start; }
+.acc.legal { flex-wrap: wrap; gap: 10px; }
+.cliente { flex-wrap: wrap; }
+.cliente .acc.legal { flex-basis: 100%; }
+.confirma { font-size: 13px; color: #A3123F; display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.link.rojo { color: #A3123F; font-weight: 600; }
+.reclamo { display: flex; flex-direction: column; gap: 6px; padding: 14px 0; border-bottom: 1px dashed var(--linea); }
+.reclamo p { margin: 0; font-size: 14px; }
+.reclamo .btn { align-self: flex-start; }
+.reclamo.vencido { background: #FDE7EC; border-radius: 12px; padding: 14px; }
+.resp { background: var(--crema); border-radius: 10px; padding: 8px 10px; }
