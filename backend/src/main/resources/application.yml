@@ -30,10 +30,12 @@ app:
 
 # se llena cuando se conecte la API de WhatsApp de Meta; vacío = modo gratis (links manuales)
 whatsapp:
+  proveedor: ${WA_PROVEEDOR:meta}   # meta | 360dialog
   token: ${WA_TOKEN:}
   phone-id: ${WA_PHONE_ID:}
   verify-token: ${WA_VERIFY_TOKEN:}
   app-secret: ${WA_APP_SECRET:}
+  webhook-clave: ${WA_WEBHOOK_CLAVE:}
   plantilla: ${WA_PLANTILLA:oferta_luna}
   idioma: ${WA_IDIOMA:es}
 

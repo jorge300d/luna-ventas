@@ -18,26 +18,36 @@ public class WhatsappService {
 
     private static final Logger log = LoggerFactory.getLogger(WhatsappService.class);
 
+    private final String proveedor;
     private final String token;
     private final String phoneId;
     private final String plantilla;
     private final String idioma;
     private final RestClient http;
 
-    public WhatsappService(@Value("${whatsapp.token:}") String token,
+    public WhatsappService(@Value("${whatsapp.proveedor:meta}") String proveedor,
+                           @Value("${whatsapp.token:}") String token,
                            @Value("${whatsapp.phone-id:}") String phoneId,
                            @Value("${whatsapp.plantilla:oferta_luna}") String plantilla,
                            @Value("${whatsapp.idioma:es}") String idioma,
                            @Value("${whatsapp.api-version:v23.0}") String version) {
+        this.proveedor = proveedor.trim().toLowerCase();
         this.token = token;
         this.phoneId = phoneId;
         this.plantilla = plantilla;
         this.idioma = idioma;
-        this.http = RestClient.builder().baseUrl("https://graph.facebook.com/" + version).build();
+        // 360dialog usa el mismo formato que la Cloud API de Meta, solo cambia la dirección y la clave
+        this.http = RestClient.builder()
+                .baseUrl(es360() ? "https://waba-v2.360dialog.io" : "https://graph.facebook.com/" + version)
+                .build();
+    }
+
+    private boolean es360() {
+        return "360dialog".equals(proveedor);
     }
 
     public boolean conectado() {
-        return !token.isBlank() && !phoneId.isBlank();
+        return !token.isBlank() && (es360() || !phoneId.isBlank());
     }
 
     // las ofertas tienen que salir con una plantilla aprobada por Meta
@@ -70,9 +80,10 @@ public class WhatsappService {
     private String enviar(Map<String, Object> body) {
         if (!conectado()) throw new IllegalStateException("WhatsApp no está conectado");
         try {
-            JsonNode res = http.post()
-                    .uri("/{id}/messages", phoneId)
-                    .header("Authorization", "Bearer " + token)
+            var req = es360()
+                    ? http.post().uri("/messages").header("D360-API-KEY", token)
+                    : http.post().uri("/{id}/messages", phoneId).header("Authorization", "Bearer " + token);
+            JsonNode res = req
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()

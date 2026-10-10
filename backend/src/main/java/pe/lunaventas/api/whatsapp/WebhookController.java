@@ -33,6 +33,7 @@ public class WebhookController {
 
     private final String verifyToken;
     private final String appSecret;
+    private final String webhookClave;
     private final ObjectMapper json;
     private final ClienteRepository clientes;
     private final ClienteService clienteService;
@@ -41,10 +42,12 @@ public class WebhookController {
 
     public WebhookController(@Value("${whatsapp.verify-token:}") String verifyToken,
                              @Value("${whatsapp.app-secret:}") String appSecret,
+                             @Value("${whatsapp.webhook-clave:}") String webhookClave,
                              ObjectMapper json, ClienteRepository clientes, ClienteService clienteService,
                              EnvioRepository envios, WhatsappService whatsapp) {
         this.verifyToken = verifyToken;
         this.appSecret = appSecret;
+        this.webhookClave = webhookClave;
         this.json = json;
         this.clientes = clientes;
         this.clienteService = clienteService;
@@ -65,8 +68,11 @@ public class WebhookController {
 
     @PostMapping
     public ResponseEntity<Void> recibir(@RequestBody String cuerpo,
-                                        @RequestHeader(value = "X-Hub-Signature-256", required = false) String firma) {
+                                        @RequestHeader(value = "X-Hub-Signature-256", required = false) String firma,
+                                        @RequestParam(name = "clave", required = false) String clave) {
+        // Meta firma cada aviso; con un proveedor se usa una clave en la URL del webhook
         if (!firmaValida(cuerpo, firma)) return ResponseEntity.status(401).build();
+        if (!webhookClave.isBlank() && !webhookClave.equals(clave)) return ResponseEntity.status(401).build();
         try {
             JsonNode raiz = json.readTree(cuerpo);
             for (JsonNode entry : raiz.path("entry")) {
