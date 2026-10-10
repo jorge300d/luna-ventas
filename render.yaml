@@ -1,0 +1,19 @@
+# Blueprint de Render para el backend. La base va en Neon (ver README).
+services:
+  - type: web
+    name: luna-ventas-api
+    runtime: docker
+    rootDir: backend
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: ADMIN_KEY
+        generateValue: true

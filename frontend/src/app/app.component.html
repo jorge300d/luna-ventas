@@ -1,0 +1,167 @@
+<a class="saltar" href="#inicio">Saltar al contenido</a>
+
+<header class="nav" [class.scrolled]="scrolled()">
+  <div class="wrap nav-in">
+    <a href="#inicio" class="marca" aria-label="Luna Ventas, inicio">
+      <app-logo [size]="44" />
+      <span>Luna Ventas</span>
+    </a>
+    <nav [class.abierto]="menu()" (click)="menu.set(false)">
+      <a href="#categorias">Categorías</a>
+      <a href="#catalogo">Catálogo</a>
+      <a href="#como-comprar">Cómo comprar</a>
+      <a href="#visitanos">Visítanos</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <div class="nav-acc">
+      <button class="bolsa" (click)="carrito.abierto.set(true)" aria-label="Ver mi pedido">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 7h12l-1 13H7L6 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+        @if (carrito.cantidad() > 0) { <span class="badge">{{ carrito.cantidad() }}</span> }
+      </button>
+      <a class="btn btn-wa solo-desk" [href]="waGeneral" target="_blank" rel="noopener">Escríbenos</a>
+      <button class="hamb" (click)="menu.set(!menu())" [attr.aria-expanded]="menu()" aria-label="Menú">
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section id="inicio" class="hero">
+    <div class="blob b1"></div><div class="blob b2"></div>
+    <div class="wrap hero-in">
+      <div class="hero-txt">
+        <p class="pre">{{ site.rubro }} · {{ site.distrito }} · {{ site.stand }}</p>
+        <h1>Ropa que te hace sentir <span class="giro" [attr.aria-label]="palabras[palabra()]">@for (p of palabras; track p; let i = $index) {<em [class.on]="i === palabra()">{{ p }}</em>}</span></h1>
+        <p class="lead">Blusas, vestidos, pantalones y conjuntos que llegan cada semana. Full moda a los precios más bajos del mercado, y tu pedido sale directo por WhatsApp.</p>
+        <div class="cta">
+          <a href="#catalogo" class="btn btn-dark">Ver catálogo</a>
+          <a [href]="waGeneral" target="_blank" rel="noopener" class="btn btn-ghost">WhatsApp {{ site.whatsappVisible }}</a>
+        </div>
+        <ul class="datos-hero">
+          <li><strong>{{ site.seguidores }}</strong> seguidoras en Facebook</li>
+          <li><strong>En vivo</strong> con novedades cada semana</li>
+        </ul>
+      </div>
+
+      <div class="hero-vis" aria-hidden="true">
+        <div class="tel">
+          <div class="tel-top"><app-logo [size]="30" /><span>Luna Ventas</span></div>
+          <div class="tel-card">
+            <div class="tel-foto"><app-prenda categoria="vestidos" color="#E8738F" /></div>
+            <div class="tel-info"><strong>Vestido midi estampado</strong><span>S/ 69 <s>S/ 85</s></span></div>
+            <div class="tel-tallas"><b>S</b><b class="on">M</b><b>L</b></div>
+            <div class="tel-btn">Agregar al pedido</div>
+          </div>
+        </div>
+        <div class="flota f1"><span class="punto"></span> Nuevo pedido por WhatsApp</div>
+        <div class="flota f2">Recojo en {{ site.stand }}</div>
+        <div class="flota f3">Yape · Plin</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORÍAS -->
+  <section id="categorias" class="sec">
+    <div class="wrap">
+      <p class="pre">Categorías</p>
+      <h2>Lo que encuentras en Luna, sin vueltas.</h2>
+      <p class="sub">Toca una categoría y te llevamos directo a esas prendas.</p>
+      <div class="cats">
+        @for (c of categorias; track c.id; let i = $index) {
+          <button class="cat" (click)="verCategoria(c.id)">
+            <div class="cat-ico" [style.background]="colorCategoria(i) + '33'"><app-prenda [categoria]="c.id" [color]="colorCategoria(i)" /></div>
+            <h3>{{ c.nombre }}</h3>
+            <p>{{ c.detalle }}</p>
+            <span class="ver">Ver prendas →</span>
+          </button>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- CATÁLOGO -->
+  <section id="catalogo" class="sec sec-crema">
+    <div class="wrap">
+      <p class="pre">Catálogo</p>
+      <h2>Lo nuevo de esta semana.</h2>
+      <p class="sub">Elige talla, agrega al pedido y envíalo por WhatsApp. Te confirmamos stock al instante.</p>
+      <app-catalogo />
+    </div>
+  </section>
+
+  <!-- CÓMO COMPRAR -->
+  <section id="como-comprar" class="sec">
+    <div class="wrap">
+      <p class="pre">Cómo comprar</p>
+      <h2>Tú eliges. Luna se encarga del resto.</h2>
+      <p class="sub">Cuatro pasos, sin registros ni complicaciones.</p>
+      <ol class="pasos">
+        @for (p of pasos; track p.titulo; let i = $index) {
+          <li>
+            <span class="num">{{ i + 1 }}</span>
+            <span class="quien" [class.luna]="p.quien === 'Luna'">{{ p.quien }}</span>
+            <h3>{{ p.titulo }}</h3>
+            <p>{{ p.texto }}</p>
+          </li>
+        }
+      </ol>
+      <ul class="garantias">
+        <li>Precios de mercado, sin recargos</li>
+        <li>Pagas solo cuando confirmamos stock</li>
+        <li>Cambios de talla coordinando por WhatsApp</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- VISÍTANOS -->
+  <section id="visitanos" class="sec sec-tinta">
+    <div class="wrap visita">
+      <div>
+        <p class="pre">Visítanos</p>
+        <h2>Pruébatelo en nuestro {{ site.stand }}.</h2>
+        <p class="sub">Estamos en {{ site.distrito }}. Escríbenos antes para separarte la prenda en tu talla.</p>
+        <dl class="info-tienda">
+          <div><dt>Ubicación</dt><dd>{{ site.stand }} · {{ site.distrito }}</dd></div>
+          <div><dt>WhatsApp</dt><dd><a [href]="waGeneral" target="_blank" rel="noopener">{{ site.whatsappVisible }}</a></dd></div>
+          <div><dt>Teléfono</dt><dd><a [href]="telLink">{{ site.telefono }}</a></dd></div>
+          <div><dt>Redes</dt><dd><a [href]="site.facebook" target="_blank" rel="noopener">Facebook</a> · <a [href]="site.tiktok" target="_blank" rel="noopener">TikTok {{ site.tiktokUsuario }}</a></dd></div>
+        </dl>
+      </div>
+      <div class="mapa">
+        <iframe [src]="mapa" title="Mapa de Lince, Lima" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACTO -->
+  <section id="contacto" class="sec">
+    <div class="wrap contacto">
+      <div>
+        <p class="pre">Contacto</p>
+        <h2>¿Buscas algo en especial?</h2>
+        <p class="sub">Cuéntanos qué necesitas y te respondemos por WhatsApp con fotos y precios.</p>
+      </div>
+      <app-contacto />
+    </div>
+  </section>
+</main>
+
+<footer class="pie">
+  <div class="wrap pie-in">
+    <a href="#inicio" class="marca"><app-logo [size]="40" /><span>Luna Ventas</span></a>
+    <p>© {{ anio }} Luna Ventas · {{ site.lema }}.</p>
+    <div class="redes">
+      <a [href]="site.facebook" target="_blank" rel="noopener">Facebook</a>
+      <a [href]="site.tiktok" target="_blank" rel="noopener">TikTok</a>
+      <a [href]="waGeneral" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+  </div>
+</footer>
+
+<a class="wa-flot" [href]="waGeneral" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.6 1.1 2.7c.1.2 1.9 2.9 4.6 4 1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.4-.2Z"/></svg>
+</a>
+
+<app-carrito />

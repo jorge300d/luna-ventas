@@ -1,0 +1,31 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: luna-ventas-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/lunaventas}
+    username: ${DB_USER:luna}
+    password: ${DB_PASSWORD:luna123}
+    hikari:
+      maximum-pool-size: 5
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+  jackson:
+    default-property-inclusion: non_null
+
+app:
+  # separar varios con coma
+  cors-origins: ${CORS_ORIGINS:http://localhost:4200}
+  admin-key: ${ADMIN_KEY:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

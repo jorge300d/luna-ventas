@@ -1,0 +1,24 @@
+.fondo { position: fixed; inset: 0; background: rgba(40, 24, 40, .35); opacity: 0; pointer-events: none; transition: .3s; z-index: 60; }
+.fondo.on { opacity: 1; pointer-events: auto; }
+.panel { position: fixed; top: 0; right: 0; height: 100dvh; width: min(420px, 100vw); background: var(--crema); z-index: 61; transform: translateX(100%); transition: transform .35s cubic-bezier(.2,.8,.2,1); display: flex; flex-direction: column; box-shadow: -20px 0 50px -30px rgba(0,0,0,.4); }
+.panel.on { transform: none; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 20px 22px; border-bottom: 1px solid var(--linea); }
+header h2 { margin: 0; font: 600 24px var(--serif); }
+.cerrar { border: 0; background: none; font-size: 30px; line-height: 1; cursor: pointer; color: var(--tinta); }
+.vacio { padding: 40px 22px; text-align: center; color: var(--suave); }
+.items { list-style: none; margin: 0; padding: 8px 22px; overflow-y: auto; flex: 1; }
+.items li { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--linea); }
+.mini { width: 64px; height: 72px; border-radius: 12px; padding: 8px; }
+.det { display: flex; flex-direction: column; gap: 3px; font-size: 14px; }
+.det span { color: var(--suave); font-size: 13px; }
+.cant { display: inline-flex; align-items: center; gap: 10px; margin-top: 4px; }
+.cant button { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--linea); background: #fff; cursor: pointer; font-size: 16px; }
+.quitar { border: 0; background: none; color: var(--suave); text-decoration: underline; cursor: pointer; font-size: 13px; }
+.datos { padding: 16px 22px 22px; border-top: 1px solid var(--linea); display: flex; flex-direction: column; gap: 10px; background: var(--blanco); }
+.datos label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 500; }
+.datos input:not([type=radio]) { padding: 11px 12px; border-radius: 12px; border: 1px solid var(--linea); font: 15px var(--sans); background: #fff; }
+.entrega { display: flex; gap: 14px; }
+.op { flex-direction: row !important; align-items: center; gap: 6px !important; font-weight: 400 !important; }
+.total { display: flex; justify-content: space-between; font-size: 18px; padding: 6px 0; }
+.full { width: 100%; justify-content: center; }
+.nota { margin: 0; font-size: 12px; color: var(--suave); text-align: center; }
