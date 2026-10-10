@@ -8,7 +8,12 @@ services:
     region: virginia
     healthCheckPath: /actuator/health
     envVars:
-      # pegar la "connection string" de Neon tal cual (postgresql://...)
+      # servidor y usuario de Neon (no son secretos)
+      - key: DB_URL
+        value: jdbc:postgresql://ep-silent-unit-b7gh6z5d.c-13.us-east-1.aws.neon.tech/neondb?sslmode=require
+      - key: DB_USER
+        value: neondb_owner
+      # la contraseña de Neon, o la "connection string" completa (postgresql://...)
       - key: DATABASE_URL
         sync: false
       - key: CORS_ORIGINS

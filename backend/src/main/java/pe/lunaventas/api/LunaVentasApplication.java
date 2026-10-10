@@ -21,6 +21,12 @@ public class LunaVentasApplication {
     // aquí se convierte al formato que usa Java
     static void usarDatabaseUrl(String url) {
         if (url == null || url.isBlank() || url.startsWith("jdbc:")) return;
+        url = url.trim().replaceAll("^['\"]|['\"]$", "");
+        // si solo se pegó la contraseña, el host y el usuario vienen de DB_URL y DB_USER
+        if (!url.contains("://")) {
+            System.setProperty("spring.datasource.password", url);
+            return;
+        }
         URI u = URI.create(url.trim().replaceFirst("^postgres(ql)?://", "http://"));
         String[] cred = u.getRawUserInfo() == null ? new String[0] : u.getRawUserInfo().split(":", 2);
         String puerto = u.getPort() > 0 ? ":" + u.getPort() : "";

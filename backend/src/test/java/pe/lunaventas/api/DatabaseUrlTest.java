@@ -25,6 +25,13 @@ class DatabaseUrlTest {
     }
 
     @Test
+    void aceptaSoloLaContrasena() {
+        LunaVentasApplication.usarDatabaseUrl("npg_ejemplo123");
+        assertThat(System.getProperty("spring.datasource.password")).isEqualTo("npg_ejemplo123");
+        assertThat(System.getProperty("spring.datasource.url")).isNull();
+    }
+
+    @Test
     void ignoraUrlsJdbc() {
         LunaVentasApplication.usarDatabaseUrl("jdbc:postgresql://localhost/x");
         assertThat(System.getProperty("spring.datasource.url")).isNull();
