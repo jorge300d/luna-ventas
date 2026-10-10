@@ -6,3 +6,5 @@ spring:
 app:
   cors-origins: http://localhost:4200
   admin-key: clave-test
+whatsapp:
+  verify-token: verif-test

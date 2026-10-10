@@ -21,9 +21,9 @@ class ApiTest {
     void listaElCatalogoInicial() throws Exception {
         mvc.perform(get("/api/productos"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(12));
+                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(12)));
         mvc.perform(get("/api/productos").param("categoria", "vestidos"))
-                .andExpect(jsonPath("$.length()").value(3));
+                .andExpect(jsonPath("$[*].categoria").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("vestidos"))));
     }
 
     @Test

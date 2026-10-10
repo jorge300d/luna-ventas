@@ -9,7 +9,8 @@ public record PedidoRequest(
         @Size(max = 20) String telefono,
         @Size(max = 80) String distrito,
         @NotBlank @Pattern(regexp = "tienda|delivery") String entrega,
-        @NotEmpty @Size(max = 30) List<@Valid Item> items
+        @NotEmpty @Size(max = 30) List<@Valid Item> items,
+        boolean aceptaOfertas
 ) {
     public record Item(
             @NotNull Long productoId,

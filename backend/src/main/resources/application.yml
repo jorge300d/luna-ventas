@@ -23,6 +23,17 @@ app:
   # separar varios con coma
   cors-origins: ${CORS_ORIGINS:http://localhost:4200}
   admin-key: ${ADMIN_KEY:}
+  sitio-url: ${SITIO_URL:https://lunaventas.vercel.app}
+  ofertas-auto: ${OFERTAS_AUTO:true}
+
+# se llena cuando se conecte la API de WhatsApp de Meta; vacío = modo gratis (links manuales)
+whatsapp:
+  token: ${WA_TOKEN:}
+  phone-id: ${WA_PHONE_ID:}
+  verify-token: ${WA_VERIFY_TOKEN:}
+  app-secret: ${WA_APP_SECRET:}
+  plantilla: ${WA_PLANTILLA:oferta_luna}
+  idioma: ${WA_IDIOMA:es}
 
 management:
   endpoints:

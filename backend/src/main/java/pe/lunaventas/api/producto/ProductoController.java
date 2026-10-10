@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import pe.lunaventas.api.campana.CampanaService;
 import pe.lunaventas.api.config.AdminGuard;
 
 import java.util.List;
@@ -15,10 +16,12 @@ public class ProductoController {
 
     private final ProductoRepository repo;
     private final AdminGuard admin;
+    private final CampanaService campanas;
 
-    public ProductoController(ProductoRepository repo, AdminGuard admin) {
+    public ProductoController(ProductoRepository repo, AdminGuard admin, CampanaService campanas) {
         this.repo = repo;
         this.admin = admin;
+        this.campanas = campanas;
     }
 
     // público: lo que ve la tienda
@@ -26,6 +29,12 @@ public class ProductoController {
     public List<Producto> listar(@RequestParam(required = false) String categoria) {
         if (categoria == null || categoria.isBlank()) return repo.findByActivoTrueOrderByNuevoDescIdAsc();
         return repo.findByActivoTrueAndCategoriaOrderByNuevoDescIdAsc(categoria);
+    }
+
+    @GetMapping("/todos")
+    public List<Producto> todos(@RequestHeader(value = "X-Admin-Key", required = false) String clave) {
+        admin.verificar(clave);
+        return repo.findAll(org.springframework.data.domain.Sort.by("id"));
     }
 
     @GetMapping("/{id}")
@@ -40,7 +49,10 @@ public class ProductoController {
                                           @Valid @RequestBody Producto p) {
         admin.verificar(clave);
         p.setId(null);
-        return ResponseEntity.status(HttpStatus.CREATED).body(repo.save(p));
+        Producto guardado = repo.save(p);
+        // si es novedad se arma sola la oferta para quienes compran esa categoría
+        campanas.ofertaProductoNuevo(guardado);
+        return ResponseEntity.status(HttpStatus.CREATED).body(guardado);
     }
 
     @PutMapping("/{id}")

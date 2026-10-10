@@ -5,11 +5,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import pe.lunaventas.api.cliente.Cliente;
+import pe.lunaventas.api.cliente.ClienteService;
 import pe.lunaventas.api.config.AdminGuard;
 import pe.lunaventas.api.producto.Producto;
 import pe.lunaventas.api.producto.ProductoRepository;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -20,11 +23,13 @@ public class PedidoController {
     private final PedidoRepository pedidos;
     private final ProductoRepository productos;
     private final AdminGuard admin;
+    private final ClienteService clientes;
 
-    public PedidoController(PedidoRepository pedidos, ProductoRepository productos, AdminGuard admin) {
+    public PedidoController(PedidoRepository pedidos, ProductoRepository productos, AdminGuard admin, ClienteService clientes) {
         this.pedidos = pedidos;
         this.productos = productos;
         this.admin = admin;
+        this.clientes = clientes;
     }
 
     // el precio se toma de la base, no del navegador
@@ -39,6 +44,7 @@ public class PedidoController {
         pedido.setEntrega(req.entrega());
 
         BigDecimal total = BigDecimal.ZERO;
+        LinkedHashSet<String> categorias = new LinkedHashSet<>();
         for (PedidoRequest.Item it : req.items()) {
             Producto p = productos.findById(it.productoId()).filter(Producto::isActivo)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Producto " + it.productoId() + " no existe"));
@@ -52,9 +58,17 @@ public class PedidoController {
             item.setCantidad(it.cantidad());
             item.setPrecioUnitario(p.getPrecio());
             pedido.agregar(item);
+            categorias.add(p.getCategoria());
             total = total.add(p.getPrecio().multiply(BigDecimal.valueOf(it.cantidad())));
         }
         pedido.setTotal(total);
+
+        // el cliente queda guardado; solo recibe ofertas si marcó la casilla
+        Cliente cliente = clientes.registrar(req.cliente(), req.telefono(), req.distrito(), "web_pedido", req.aceptaOfertas());
+        if (cliente != null) {
+            pedido.setClienteId(cliente.getId());
+            clientes.sumarCompra(cliente, total, categorias);
+        }
         Pedido guardado = pedidos.save(pedido);
         return Map.of("id", guardado.getId(), "total", total);
     }

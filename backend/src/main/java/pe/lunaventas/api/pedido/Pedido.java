@@ -22,6 +22,9 @@ public class Pedido {
     private String estado = "pendiente";
     private BigDecimal total = BigDecimal.ZERO;
 
+    @Column(name = "cliente_id")
+    private Long clienteId;
+
     @Column(name = "creado_en", insertable = false, updatable = false)
     private OffsetDateTime creadoEn;
 
@@ -47,6 +50,8 @@ public class Pedido {
     public void setEstado(String estado) { this.estado = estado; }
     public BigDecimal getTotal() { return total; }
     public void setTotal(BigDecimal total) { this.total = total; }
+    public Long getClienteId() { return clienteId; }
+    public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
     public OffsetDateTime getCreadoEn() { return creadoEn; }
     public List<PedidoItem> getItems() { return items; }
 }

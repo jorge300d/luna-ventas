@@ -22,6 +22,9 @@ public class Contacto {
     @NotBlank @Size(max = 1000)
     private String mensaje;
 
+    @Column(name = "cliente_id")
+    private Long clienteId;
+
     @Column(name = "creado_en", insertable = false, updatable = false)
     private OffsetDateTime creadoEn;
 
@@ -33,5 +36,7 @@ public class Contacto {
     public void setTelefono(String telefono) { this.telefono = telefono; }
     public String getMensaje() { return mensaje; }
     public void setMensaje(String mensaje) { this.mensaje = mensaje; }
+    public Long getClienteId() { return clienteId; }
+    public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
     public OffsetDateTime getCreadoEn() { return creadoEn; }
 }
