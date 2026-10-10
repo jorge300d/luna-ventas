@@ -59,6 +59,10 @@ import { SITE, linkWhatsapp } from '../site.config';
               <input name="distrito" [(ngModel)]="distrito" placeholder="Ej. Jesús María" />
             </label>
           }
+          <label class="acepto">
+            <input type="checkbox" name="ofertas" [(ngModel)]="aceptaOfertas" />
+            <span>Quiero recibir ofertas y novedades de Luna Ventas por WhatsApp. Puedo darme de baja cuando quiera respondiendo BAJA.</span>
+          </label>
           <div class="total"><span>Total</span><strong>S/ {{ carrito.total() }}</strong></div>
           <button class="btn btn-wa full" type="submit" [disabled]="!nombre.trim() || enviando()">
             <svg class="wa-ico" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.6 1.1 2.7c.1.2 1.9 2.9 4.6 4 1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.4-.2Z"/></svg>{{ enviando() ? 'Abriendo WhatsApp…' : 'Enviar pedido por WhatsApp' }}
@@ -78,6 +82,7 @@ export class CarritoComponent {
   telefono = '';
   distrito = '';
   entrega: 'tienda' | 'delivery' = 'tienda';
+  aceptaOfertas = false;
   enviando = signal(false);
 
   enviar() {
@@ -90,6 +95,7 @@ export class CarritoComponent {
       telefono: this.telefono.trim(),
       distrito: this.entrega === 'delivery' ? this.distrito.trim() : SITE.distrito,
       entrega: this.entrega,
+      aceptaOfertas: this.aceptaOfertas && !!this.telefono.trim(),
       items: items.map(i => ({ productoId: i.producto.id, talla: i.talla, cantidad: i.cantidad })),
     }).subscribe(res => {
       const lineas = items.map(i => `- ${i.cantidad} x ${i.producto.nombre} (talla ${i.talla}) S/ ${i.cantidad * i.producto.precio}`);

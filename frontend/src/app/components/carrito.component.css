@@ -19,6 +19,8 @@ header h2 { margin: 0; font: 600 24px var(--serif); }
 .datos input:not([type=radio]) { padding: 11px 12px; border-radius: 12px; border: 1px solid var(--linea); font: 15px var(--sans); background: #fff; }
 .entrega { display: flex; gap: 14px; }
 .op { flex-direction: row !important; align-items: center; gap: 6px !important; font-weight: 400 !important; }
+.acepto { flex-direction: row !important; align-items: flex-start; gap: 8px !important; font-weight: 400 !important; font-size: 12.5px !important; line-height: 1.4; color: var(--suave); }
+.acepto input { margin-top: 2px; accent-color: var(--rosa-fuerte); width: 16px; height: 16px; flex: none; }
 .total { display: flex; justify-content: space-between; font-size: 18px; padding: 6px 0; }
 .full { width: 100%; justify-content: center; }
 .nota { margin: 0; font-size: 12px; color: var(--suave); text-align: center; }

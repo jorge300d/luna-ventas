@@ -12,6 +12,7 @@ export interface Producto {
   imagenUrl?: string | null;
   nuevo: boolean;
   stock: number;
+  activo?: boolean;
 }
 
 export interface ItemCarrito {
@@ -25,6 +26,7 @@ export interface PedidoRequest {
   telefono: string;
   distrito: string;
   entrega: 'tienda' | 'delivery';
+  aceptaOfertas: boolean;
   items: { productoId: number; talla: string; cantidad: number }[];
 }
 

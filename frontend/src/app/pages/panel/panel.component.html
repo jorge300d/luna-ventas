@@ -1,0 +1,251 @@
+@if (!resumen()) {
+  <main class="login">
+    <form class="caja" (ngSubmit)="entrar()">
+      <app-logo [size]="64" />
+      <h1>Panel de Luna Ventas</h1>
+      <p>Ingresa la clave de administración para ver tus clientes, pedidos y ofertas.</p>
+      <label for="clave">Clave</label>
+      <input id="clave" name="clave" type="password" [(ngModel)]="claveInput" autocomplete="current-password" />
+      @if (error()) { <p class="err">{{ error() }}</p> }
+      <button class="btn btn-dark" type="submit" [disabled]="cargando()">{{ cargando() ? 'Entrando…' : 'Entrar' }}</button>
+      <a routerLink="/" class="volver">Volver a la tienda</a>
+    </form>
+  </main>
+} @else {
+  <div class="panel">
+    <header class="top">
+      <div class="marca"><app-logo [size]="36" /><strong>Panel</strong></div>
+      <nav>
+        <button [class.on]="pestana() === 'inicio'" (click)="ir('inicio')">Inicio</button>
+        <button [class.on]="pestana() === 'clientes'" (click)="ir('clientes')">Clientes</button>
+        <button [class.on]="pestana() === 'ofertas'" (click)="ir('ofertas')">Ofertas</button>
+        <button [class.on]="pestana() === 'pedidos'" (click)="ir('pedidos')">Pedidos</button>
+        <button [class.on]="pestana() === 'prendas'" (click)="ir('prendas')">Prendas</button>
+      </nav>
+      <button class="salir" (click)="salir()">Salir</button>
+    </header>
+
+    <main class="cont">
+      @if (aviso()) { <p class="aviso">{{ aviso() }}</p> }
+      @if (error()) { <p class="err">{{ error() }}</p> }
+
+      @switch (pestana()) {
+        @case ('inicio') {
+          @let r = resumen()!;
+          <section class="stats">
+            <div><span>Clientes guardados</span><strong>{{ r.clientes }}</strong></div>
+            <div><span>Aceptan ofertas</span><strong>{{ r.aceptanOfertas }}</strong></div>
+            <div><span>Pedidos web</span><strong>{{ r.pedidos }}</strong></div>
+            <div><span>Ventas web</span><strong>S/ {{ r.ventas | number:'1.0-2' }}</strong></div>
+          </section>
+
+          <section class="bloque modo" [class.activo]="r.whatsappConectado">
+            <h2>Envío de ofertas: {{ r.whatsappConectado ? 'automático' : 'gratis (un clic por cliente)' }}</h2>
+            @if (r.whatsappConectado) {
+              <p>WhatsApp está conectado. Las ofertas programadas y las de prendas nuevas salen solas; quienes te escriben quedan guardados y pueden responder OFERTAS o BAJA.</p>
+            } @else {
+              <p>Las ofertas se preparan aquí y tú las envías tocando un botón por cliente, que abre WhatsApp con el mensaje listo. Cuando conectes la API de WhatsApp de Meta, el envío pasa a ser automático sin cambiar nada más.</p>
+            }
+          </section>
+
+          <section class="bloque">
+            <h2>Últimos pedidos</h2>
+            @for (p of pedidos().slice(0, 5); track p.id) {
+              <div class="fila">
+                <span>#{{ p.id }} · {{ p.cliente }}</span>
+                <span class="chip" [attr.data-e]="p.estado">{{ p.estado }}</span>
+                <strong>S/ {{ p.total | number:'1.0-2' }}</strong>
+              </div>
+            } @empty { <p class="vacio">Todavía no hay pedidos desde la web.</p> }
+          </section>
+        }
+
+        @case ('clientes') {
+          <section class="bloque">
+            <div class="cab">
+              <h2>Clientes ({{ clientesVisibles().length }})</h2>
+              <button class="btn btn-ghost chico" (click)="exportar()">Descargar Excel (CSV)</button>
+            </div>
+            <div class="filtros">
+              <input placeholder="Buscar por nombre o celular" [ngModel]="buscar()" (ngModelChange)="buscar.set($event)" />
+              <label class="chk"><input type="checkbox" [ngModel]="soloOfertas()" (ngModelChange)="soloOfertas.set($event)" /> Solo los que aceptan ofertas</label>
+            </div>
+            <div class="lista">
+              @for (c of clientesVisibles(); track c.id) {
+                <article class="cliente">
+                  <div>
+                    <strong>{{ c.nombre || 'Sin nombre' }}</strong>
+                    <span class="sub">+{{ c.telefono }} · {{ origen(c.origen) }}</span>
+                    <span class="sub">
+                      {{ c.totalPedidos }} pedido(s) · S/ {{ c.totalGastado | number:'1.0-2' }}
+                      @if (c.intereses) { · {{ c.intereses.split(',').join(', ') }} }
+                    </span>
+                  </div>
+                  <div class="acc">
+                    <button class="chip" [class.si]="c.aceptaOfertas" (click)="cambiarOfertas(c)"
+                            [attr.aria-label]="c.aceptaOfertas ? 'Quitar de ofertas' : 'Marcar que acepta ofertas'">
+                      {{ c.aceptaOfertas ? 'Recibe ofertas' : 'Sin ofertas' }}
+                    </button>
+                    <a class="btn btn-wa chico" [href]="linkCliente(c)" target="_blank" rel="noopener">WhatsApp</a>
+                  </div>
+                </article>
+              } @empty { <p class="vacio">Aquí aparecen quienes compran o escriben desde la web, y quienes te escriben por WhatsApp cuando conectes la API.</p> }
+            </div>
+          </section>
+
+          <section class="bloque">
+            <h2>Agregar cliente a mano</h2>
+            <p class="ayuda">Para quien te pidió las ofertas en la tienda o por chat. Marca la casilla solo si te dio permiso.</p>
+            <form class="form" (ngSubmit)="agregarCliente()">
+              <input name="n" placeholder="Nombre" [(ngModel)]="nuevoCliente.nombre" />
+              <input name="t" placeholder="Celular" inputmode="tel" [(ngModel)]="nuevoCliente.telefono" />
+              <label class="chk"><input type="checkbox" name="a" [(ngModel)]="nuevoCliente.aceptaOfertas" /> Aceptó recibir ofertas</label>
+              <button class="btn btn-dark" type="submit">Guardar</button>
+            </form>
+          </section>
+        }
+
+        @case ('ofertas') {
+          @if (resultado(); as r) {
+            @if (r.modo === 'manual') {
+              <section class="bloque envio">
+                <div class="cab">
+                  <h2>Enviar oferta ({{ abiertos().size }}/{{ r.destinos.length }})</h2>
+                  <button class="btn btn-ghost chico" (click)="resultado.set(null)">Cerrar</button>
+                </div>
+                <p class="ayuda">Toca cada botón: se abre WhatsApp con el mensaje y su nombre ya puestos, solo le das enviar.</p>
+                @for (d of r.destinos; track d.clienteId) {
+                  <div class="fila">
+                    <span>{{ d.nombre || ('+' + d.telefono) }}</span>
+                    <a class="btn chico" [class.btn-wa]="!abiertos().has(d.clienteId)" [class.btn-ghost]="abiertos().has(d.clienteId)"
+                       [href]="d.link" target="_blank" rel="noopener" (click)="marcarAbierto(d.clienteId)">
+                      {{ abiertos().has(d.clienteId) ? 'Abierto ✓' : 'Enviar' }}
+                    </a>
+                  </div>
+                } @empty { <p class="vacio">Nadie cumple con esta oferta todavía.</p> }
+              </section>
+            }
+          }
+
+          <section class="bloque">
+            <h2>Nueva oferta</h2>
+            <form class="form" (ngSubmit)="crearCampana()">
+              <label>Nombre interno <input name="ti" placeholder="Ej. Remate de vestidos" [(ngModel)]="nuevaCampana.titulo" /></label>
+              <label>Mensaje
+                <textarea name="me" rows="3" maxlength="700" placeholder="Ej. este sábado todos los vestidos con 20% de descuento. Míralos en lunaventas.vercel.app" [(ngModel)]="nuevaCampana.mensaje"></textarea>
+              </label>
+              <div class="dos">
+                <label>¿A quiénes?
+                  <select name="ca" [(ngModel)]="nuevaCampana.categoria">
+                    <option value="">Todos los que aceptan ofertas</option>
+                    @for (c of categorias; track c.id) { <option [value]="c.id">Los que compraron {{ c.nombre.toLowerCase() }}</option> }
+                  </select>
+                </label>
+                <label>Programar (opcional)
+                  <input name="pr" type="datetime-local" [(ngModel)]="nuevaCampana.programadaEn" />
+                </label>
+              </div>
+              <div class="previa">
+                <span>Así le llega a cada cliente ({{ destinatariosNueva() }} personas):</span>
+                <p>{{ vistaPrevia() }}</p>
+              </div>
+              <button class="btn btn-dark" type="submit">Guardar oferta</button>
+            </form>
+          </section>
+
+          <section class="bloque">
+            <h2>Ofertas</h2>
+            @for (c of campanas(); track c.id) {
+              <article class="campana">
+                <div>
+                  <strong>{{ c.titulo }}</strong>
+                  @if (c.automatica) { <span class="chip auto">Automática</span> }
+                  <span class="chip" [attr.data-e]="c.estado">{{ c.estado }}</span>
+                  <p>{{ c.mensaje }}</p>
+                  <span class="sub">
+                    {{ nombreCategoria(c.categoria) }} · {{ c.destinatarios }} destinatarios
+                    @if (c.programadaEn && c.estado === 'programada') { · sale el {{ c.programadaEn | date:'d MMM, HH:mm' }} }
+                    @if (c.enviadaEn) { · enviada el {{ c.enviadaEn | date:'d MMM, HH:mm' }} }
+                    @if (c.enviados) { · {{ c.enviados }} enviados, {{ c.leidos }} leídos }
+                    @if (c.fallidos) { · {{ c.fallidos }} fallidos }
+                  </span>
+                </div>
+                <div class="acc">
+                  <button class="btn btn-wa chico" (click)="enviarCampana(c)" [disabled]="cargando()">
+                    {{ c.estado === 'enviada' ? (resumen()!.whatsappConectado ? 'Reintentar' : 'Ver enlaces') : 'Enviar ahora' }}
+                  </button>
+                  @if (c.estado !== 'enviada') { <button class="link" (click)="borrarCampana(c)">Borrar</button> }
+                </div>
+              </article>
+            } @empty { <p class="vacio">Aún no hay ofertas. Crea una arriba o publica una prenda nueva y se armará sola.</p> }
+          </section>
+        }
+
+        @case ('pedidos') {
+          <section class="bloque">
+            <h2>Pedidos de la web</h2>
+            @for (p of pedidos(); track p.id) {
+              <article class="pedido">
+                <div class="cab">
+                  <strong>#{{ p.id }} · {{ p.cliente }}</strong>
+                  <select [ngModel]="p.estado" (ngModelChange)="cambiarEstado(p, $event)" [attr.aria-label]="'Estado del pedido ' + p.id">
+                    <option value="pendiente">Pendiente</option>
+                    <option value="confirmado">Confirmado</option>
+                    <option value="entregado">Entregado</option>
+                    <option value="cancelado">Cancelado</option>
+                  </select>
+                </div>
+                <span class="sub">{{ p.creadoEn | date:'d MMM, HH:mm' }} · {{ p.entrega === 'delivery' ? 'Delivery a ' + (p.distrito || '—') : 'Recojo en tienda' }} @if (p.telefono) { · {{ p.telefono }} }</span>
+                <ul>
+                  @for (i of p.items; track $index) { <li>{{ i.cantidad }} × {{ i.nombre }} (talla {{ i.talla }}) · S/ {{ i.cantidad * i.precioUnitario | number:'1.0-2' }}</li> }
+                </ul>
+                <strong class="tot">Total S/ {{ p.total | number:'1.0-2' }}</strong>
+              </article>
+            } @empty { <p class="vacio">Todavía no hay pedidos desde la web.</p> }
+          </section>
+        }
+
+        @case ('prendas') {
+          <section class="bloque">
+            <h2>Publicar prenda</h2>
+            <p class="ayuda">Si la marcas como nueva, se arma sola una oferta para los clientes que compran esa categoría.</p>
+            <form class="form" (ngSubmit)="crearPrenda()">
+              <input name="pn" placeholder="Nombre de la prenda" [(ngModel)]="nuevaPrenda.nombre" />
+              <input name="pd" placeholder="Descripción corta" [(ngModel)]="nuevaPrenda.descripcion" />
+              <div class="dos">
+                <label>Categoría
+                  <select name="pc" [(ngModel)]="nuevaPrenda.categoria">
+                    @for (c of categorias; track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
+                  </select>
+                </label>
+                <label>Tallas (separadas por coma) <input name="pt" [(ngModel)]="nuevaPrenda.tallas" /></label>
+              </div>
+              <div class="tres">
+                <label>Precio S/ <input name="pp" type="number" min="0" step="0.5" [(ngModel)]="nuevaPrenda.precio" /></label>
+                <label>Antes S/ <input name="pa" type="number" min="0" step="0.5" [(ngModel)]="nuevaPrenda.precioAntes" placeholder="opcional" /></label>
+                <label>Stock <input name="ps" type="number" min="0" [(ngModel)]="nuevaPrenda.stock" /></label>
+              </div>
+              <div class="dos">
+                <label>Link de la foto (opcional) <input name="pi" placeholder="https://…" [(ngModel)]="nuevaPrenda.imagenUrl" /></label>
+                <label>Color si no hay foto <input name="pco" type="color" [(ngModel)]="nuevaPrenda.color" /></label>
+              </div>
+              <label class="chk"><input type="checkbox" name="pnu" [(ngModel)]="nuevaPrenda.nuevo" /> Es novedad (avisar a clientes)</label>
+              <button class="btn btn-dark" type="submit">Publicar</button>
+            </form>
+          </section>
+
+          <section class="bloque">
+            <h2>Prendas</h2>
+            @for (p of prendas(); track p.id) {
+              <div class="fila" [class.oculta]="p.activo === false">
+                <span>{{ p.nombre }} <span class="sub">· {{ nombreCategoria(p.categoria) }} · S/ {{ p.precio }}</span></span>
+                @if (p.activo === false) { <span class="chip">Oculta</span> }
+                @else { <button class="link" (click)="ocultar(p)">Ocultar</button> }
+              </div>
+            }
+          </section>
+        }
+      }
+    </main>
+  </div>
+}

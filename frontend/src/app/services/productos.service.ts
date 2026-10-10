@@ -36,7 +36,7 @@ export class ProductosService {
     );
   }
 
-  enviarContacto(datos: { nombre: string; telefono: string; mensaje: string }) {
+  enviarContacto(datos: { nombre: string; telefono: string; mensaje: string; aceptaOfertas: boolean }) {
     return this.http.post(`${environment.apiUrl}/contactos`, datos).pipe(
       timeout(6000),
       catchError(() => of(null)),
