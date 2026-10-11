@@ -60,7 +60,7 @@ h1 { font: 600 clamp(40px, 6vw, 72px)/1.02 var(--serif); letter-spacing: -.02em;
 h2 { font: 600 clamp(32px, 4.4vw, 50px)/1.08 var(--serif); letter-spacing: -.015em; margin: 10px 0 14px; max-width: 760px; }
 .sub { font-size: 18px; color: var(--suave); max-width: 600px; margin: 0 0 44px; line-height: 1.55; }
 
-.cats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+.cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .cat { text-align: left; background: var(--blanco); border: 1px solid var(--linea); border-radius: 24px; padding: 18px; cursor: pointer; font: inherit; color: inherit; display: flex; flex-direction: column; gap: 6px; transition: transform .25s, border-color .25s; }
 .cat:hover { transform: translateY(-4px); border-color: var(--rosa-fuerte); }
 .cat-ico { height: 140px; border-radius: 18px; padding: 18px 30px; margin-bottom: 8px; }
@@ -92,6 +92,27 @@ h2 { font: 600 clamp(32px, 4.4vw, 50px)/1.08 var(--serif); letter-spacing: -.015
 
 .contacto { display: grid; grid-template-columns: .9fr 1.1fr; gap: 48px; align-items: start; }
 
+.cat-tiktok { text-decoration: none; background: var(--tinta); color: #fff; border-color: var(--tinta); }
+.cat-tiktok p { color: #d9c9d6; }
+.cat-tiktok .ver { color: #F6B3D6; }
+.cat-ico.tk { display: grid; place-items: center; background: rgba(255,255,255,.08); color: #fff; }
+.datos-hero a { color: inherit; text-decoration: none; }
+
+/* LIVES */
+.live { background: linear-gradient(180deg, #FFFBF5, #FCEFF5); }
+.live-in { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; }
+.live .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn-tk { background: #111; color: #fff; }
+.btn-tk:hover { box-shadow: 0 14px 28px -14px rgba(0,0,0,.7); }
+.live-card { justify-self: center; width: min(320px, 100%); background: #1a1220; color: #fff; border-radius: 30px; padding: 16px; box-shadow: 0 40px 70px -40px rgba(59,42,63,.8); }
+.live-top { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.live-dot { background: #FE2C55; border-radius: 6px; padding: 3px 8px; font-size: 11px; letter-spacing: .06em; animation: latido 1.6s ease-in-out infinite; }
+@keyframes latido { 50% { opacity: .55; } }
+.live-foto { height: 220px; border-radius: 20px; background: linear-gradient(160deg, #3a2a44, #5b3c66); padding: 24px 70px; }
+.live-chat { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.live-chat p { margin: 0; font-size: 13px; background: rgba(255,255,255,.08); border-radius: 12px; padding: 7px 10px; width: fit-content; max-width: 100%; }
+.live-chat b { color: #F6B3D6; margin-right: 4px; }
+
 /* PIE */
 .pie { border-top: 1px solid var(--linea); padding: 34px 0; }
 .pie-in { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
@@ -107,7 +128,8 @@ h2 { font: 600 clamp(32px, 4.4vw, 50px)/1.08 var(--serif); letter-spacing: -.015
 
 /* RESPONSIVE */
 @media (max-width: 1080px) {
-  .cats { grid-template-columns: repeat(3, 1fr); }
+  .cats { grid-template-columns: repeat(2, 1fr); }
+  .live-in { grid-template-columns: 1fr; }
   .pasos { grid-template-columns: repeat(2, 1fr); }
   .pasos li::after { display: none; }
 }

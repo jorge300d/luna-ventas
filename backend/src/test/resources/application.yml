@@ -6,5 +6,6 @@ spring:
 app:
   cors-origins: http://localhost:4200
   admin-key: clave-test
+  max-envios-por-10min: 1000
 whatsapp:
   verify-token: verif-test

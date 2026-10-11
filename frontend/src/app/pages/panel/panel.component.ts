@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { Meta } from '@angular/platform-browser';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -57,6 +58,8 @@ export class PanelComponent {
   nuevaPrenda = this.prendaVacia();
 
   constructor() {
+    // el panel no debe aparecer en Google
+    inject(Meta).updateTag({ name: 'robots', content: 'noindex, nofollow' });
     if (this.admin.clave()) this.cargarTodo();
   }
 

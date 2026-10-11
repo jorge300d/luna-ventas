@@ -54,7 +54,7 @@ export class HomeComponent implements OnDestroy {
   }
 
   colorCategoria(i: number) {
-    return ['#F4A6C1', '#E8738F', '#E9C46A', '#F2B880', '#7FA7D8'][i % 5];
+    return ['#F4A6C1', '#E8738F', '#E9C46A', '#F2B880', '#7FA7D8', '#B9A3D9', '#7FB3D5'][i % 7];
   }
 
   ngOnDestroy() {
