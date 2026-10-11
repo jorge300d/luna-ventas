@@ -138,6 +138,7 @@ h2 { font: 600 clamp(32px, 4.4vw, 50px)/1.08 var(--serif); letter-spacing: -.015
   nav.abierto { transform: none; }
   nav a { padding: 14px 4px; border-bottom: 1px solid var(--linea); font-size: 17px; }
   .hamb { display: flex; }
+  .nav-acc { margin-left: auto; }
   .solo-desk { display: none; }
   .hero-in, .visita, .contacto { grid-template-columns: 1fr; }
   .hero-vis { height: 470px; }
