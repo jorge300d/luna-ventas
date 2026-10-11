@@ -155,16 +155,16 @@
       <div>
         <p class="pre">Visítanos</p>
         <h2>Pruébatelo en nuestro {{ site.stand }}.</h2>
-        <p class="sub">Estamos en {{ site.distrito }}. Escríbenos antes para separarte la prenda en tu talla.</p>
+        <p class="sub">Estamos en {{ site.direccion }}. Escríbenos antes para separarte la prenda en tu talla.</p>
         <dl class="info-tienda">
-          <div><dt>Ubicación</dt><dd>{{ site.stand }} · {{ site.distrito }}</dd></div>
+          <div><dt>Ubicación</dt><dd>{{ site.direccion }}, Lima</dd></div>
           <div><dt>WhatsApp y llamadas</dt><dd><a [href]="waGeneral" target="_blank" rel="noopener">{{ site.whatsappVisible }}</a></dd></div>
           <div><dt>Redes</dt><dd><a [href]="site.facebook" target="_blank" rel="noopener">Facebook</a> · <a [href]="site.tiktok" target="_blank" rel="noopener">TikTok {{ site.tiktokUsuario }}</a></dd></div>
         </dl>
       </div>
       <div class="mapa">
         @if (verMapa()) {
-          <iframe [src]="mapa" title="Mapa de Lince, Lima" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          <iframe [src]="mapa" title="Mapa: Av. Arenales 1487, Lince" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         } @else {
           <div class="mapa-off">
             <p>El mapa lo muestra Google. Al cargarlo, Google recibe datos de tu visita.</p>

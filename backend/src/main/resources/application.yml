@@ -39,7 +39,7 @@ app:
   politica-version: "2026-10"
   proveedor-nombre: ${PROVEEDOR_NOMBRE:Luna Ventas}
   proveedor-ruc: ${PROVEEDOR_RUC:}
-  proveedor-domicilio: ${PROVEEDOR_DOMICILIO:}
+  proveedor-domicilio: ${PROVEEDOR_DOMICILIO:Av. Arenales 1487, Stand 1, Lince, Lima}
   correo-remitente: ${MAIL_USER:}
   correo-negocio: ${CORREO_NEGOCIO:}
 

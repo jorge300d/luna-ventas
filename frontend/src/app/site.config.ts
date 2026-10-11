@@ -7,13 +7,14 @@ export const SITE = {
   whatsappVisible: '961 432 705',
   telefono: '961 432 705',
   distrito: 'Lince, Lima',
+  direccion: 'Av. Arenales 1487, Stand 1, Lince',
   stand: 'Stand 1',
   facebook: 'https://www.facebook.com/marylunaventas',
   tiktok: 'https://www.tiktok.com/@wwwlunaventas',
   tiktokUsuario: '@wwwlunaventas',
   seguidores: '4,9 mil',
-  mapa: 'https://www.google.com/maps?q=Lince,+Lima,+Peru&output=embed',
-  mapaLink: 'https://www.google.com/maps/search/?api=1&query=Lince,+Lima,+Peru',
+  mapa: 'https://www.google.com/maps?q=Av.+Arenales+1487,+Lince,+Lima,+Peru&output=embed',
+  mapaLink: 'https://www.google.com/maps/search/?api=1&query=Av.+Arenales+1487,+Lince,+Lima,+Peru',
 };
 
 // Datos legales del proveedor (Código del Consumidor y Ley 29733).
@@ -21,7 +22,7 @@ export const SITE = {
 export const LEGAL = {
   titular: '',                 // nombre completo de la dueña o razón social de la empresa
   ruc: '',
-  domicilio: '',               // dirección completa del stand (galería, número, Lince)
+  domicilio: 'Av. Arenales 1487, Stand 1, Lince, Lima',
   correo: '',                  // correo para reclamos y derechos ARCO
   preciosIncluyenIgv: true,    // false si el negocio está en el Nuevo RUS
   diasCambio: 7,               // días calendario para cambios de talla o modelo
