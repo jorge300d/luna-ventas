@@ -57,7 +57,7 @@ public class AdminController {
 
     public record NuevaCampana(@NotBlank @Size(max = 120) String titulo,
                                @NotBlank @Size(max = 700) String mensaje,
-                               @Pattern(regexp = "|blusas|vestidos|pantalones|conjuntos|casacas") String categoria,
+                               @Pattern(regexp = "|blusas|vestidos|pantalones|conjuntos|casacas|pijamas|ninos") String categoria,
                                OffsetDateTime programadaEn,
                                java.time.LocalDate validoHasta) {}
 

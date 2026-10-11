@@ -27,6 +27,15 @@ class ApiTest {
     }
 
     @Test
+    void existenLasCategoriasPijamasYNinos() throws Exception {
+        mvc.perform(get("/api/productos").param("categoria", "pijamas"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
+        mvc.perform(get("/api/productos").param("categoria", "ninos"))
+                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
+    }
+
+    @Test
     void elTotalSeCalculaConPreciosDeLaBase() throws Exception {
         // producto 1 cuesta 35, se piden 2
         String body = """

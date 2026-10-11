@@ -22,7 +22,7 @@ public class Producto {
     private String descripcion;
 
     @NotBlank
-    @Pattern(regexp = "blusas|vestidos|pantalones|conjuntos|casacas")
+    @Pattern(regexp = "blusas|vestidos|pantalones|conjuntos|casacas|pijamas|ninos")
     private String categoria;
 
     @NotNull @DecimalMin("0.0")
