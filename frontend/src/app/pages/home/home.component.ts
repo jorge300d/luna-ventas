@@ -8,6 +8,7 @@ import { ContactoComponent } from '../../components/contacto.component';
 import { PieLegalComponent } from '../../components/pie-legal.component';
 import { CarritoService } from '../../services/carrito.service';
 import { ProductosService } from '../../services/productos.service';
+import { ConsentimientoService } from '../../services/consentimiento.service';
 import { CATEGORIAS, Categoria } from '../../models/producto';
 import { SITE, linkWhatsapp } from '../../site.config';
 
@@ -21,6 +22,7 @@ import { SITE, linkWhatsapp } from '../../site.config';
 export class HomeComponent implements OnDestroy {
   carrito = inject(CarritoService);
   productos = inject(ProductosService);
+  consentimiento = inject(ConsentimientoService);
 
   // solo se muestran las categorías que tienen prendas
   categoriasConStock = computed(() => {

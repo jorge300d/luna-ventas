@@ -1,10 +1,12 @@
-import { Injectable, computed, effect, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { ConsentimientoService } from './consentimiento.service';
 import { ItemCarrito, Producto } from '../models/producto';
 
 const CLAVE = 'luna-carrito';
 
 @Injectable({ providedIn: 'root' })
 export class CarritoService {
+  private consentimiento = inject(ConsentimientoService);
   items = signal<ItemCarrito[]>(this.leer());
   abierto = signal(false);
 
@@ -14,7 +16,10 @@ export class CarritoService {
   constructor() {
     // guardo el carrito para que no se pierda al recargar
     effect(() => {
-      try { localStorage.setItem(CLAVE, JSON.stringify(this.items())); } catch {}
+      const items = this.items();
+      // solo se guarda en el navegador si la persona aceptó las cookies
+      if (!this.consentimiento.permitido()) return;
+      try { localStorage.setItem(CLAVE, JSON.stringify(items)); } catch {}
     });
   }
 
