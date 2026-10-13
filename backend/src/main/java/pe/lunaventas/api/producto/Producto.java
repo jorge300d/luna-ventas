@@ -40,6 +40,10 @@ public class Producto {
     @Column(name = "imagen_url")
     private String imagenUrl;
 
+    // foto de la espalda (opcional): se ve al voltear la prenda
+    @Column(name = "imagen_espalda_url")
+    private String imagenEspaldaUrl;
+
     private boolean nuevo;
 
     @Min(0)
@@ -71,6 +75,8 @@ public class Producto {
     public void setColor(String color) { this.color = color; }
     public String getImagenUrl() { return imagenUrl; }
     public void setImagenUrl(String imagenUrl) { this.imagenUrl = imagenUrl; }
+    public String getImagenEspaldaUrl() { return imagenEspaldaUrl; }
+    public void setImagenEspaldaUrl(String imagenEspaldaUrl) { this.imagenEspaldaUrl = imagenEspaldaUrl == null || imagenEspaldaUrl.isBlank() ? null : imagenEspaldaUrl; }
     public boolean isNuevo() { return nuevo; }
     public void setNuevo(boolean nuevo) { this.nuevo = nuevo; }
     public int getStock() { return stock; }

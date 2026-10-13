@@ -2,13 +2,14 @@ import { Component, HostListener, computed, effect, inject, input, output, signa
 import { Producto } from '../models/producto';
 import { CarritoService } from '../services/carrito.service';
 import { PrendaComponent } from './prenda.component';
+import { VisorPrendaComponent } from './visor-prenda.component';
 import { linkWhatsapp } from '../site.config';
 
-// ficha de la prenda: foto grande con zoom, detalles, talla y botones de compra
+// ficha de la prenda: visor que gira y se voltea, detalles, talla y botones de compra
 @Component({
   selector: 'app-producto-detalle',
   standalone: true,
-  imports: [PrendaComponent],
+  imports: [PrendaComponent, VisorPrendaComponent],
   template: `
     @if (producto(); as p) {
       <div class="velo" (click)="cerrar.emit()"></div>
@@ -17,17 +18,11 @@ import { linkWhatsapp } from '../site.config';
           <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
 
-        <div class="foto" [class.zoom]="zoom()" (click)="alternarZoom($event)" (mousemove)="mover($event)" (mouseleave)="zoom.set(false)">
+        <div class="foto">
           @if (p.imagenUrl) {
-            <img [src]="p.imagenUrl" [alt]="p.nombre" [style.transform-origin]="origen()" />
+            <app-visor-prenda [producto]="p" />
           } @else {
             <div class="silueta"><app-prenda [categoria]="p.categoria" [color]="p.color" /></div>
-          }
-          @if (p.imagenUrl) {
-            <span class="ayuda-zoom">
-              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4M11 8v6M8 11h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-              {{ zoom() ? 'Toca para alejar' : 'Toca para acercar' }}
-            </span>
           }
           @if (p.stock === 1) { <span class="sello">Pieza única</span> }
         </div>
@@ -92,8 +87,6 @@ export class ProductoDetalleComponent {
 
   largos = ['corto', 'midi', 'maxi'] as const;
   talla = signal('');
-  zoom = signal(false);
-  origen = signal('50% 50%');
   agregado = signal(false);
 
   constructor() {
@@ -101,7 +94,6 @@ export class ProductoDetalleComponent {
     effect(() => {
       const p = this.producto();
       this.talla.set(p?.tallas[0] ?? '');
-      this.zoom.set(false);
       this.agregado.set(false);
       document.body.style.overflow = p ? 'hidden' : '';
     });
@@ -118,19 +110,6 @@ export class ProductoDetalleComponent {
 
   nombreCategoria(c: string) {
     return { blusas: 'Blusas', vestidos: 'Vestidos', pantalones: 'Pantalones', conjuntos: 'Conjuntos', casacas: 'Casacas', pijamas: 'Pijamas', ninos: 'Niños' }[c] ?? c;
-  }
-
-  alternarZoom(e: MouseEvent) {
-    if (!this.producto()?.imagenUrl) return;
-    this.mover(e);
-    this.zoom.update(z => !z);
-  }
-
-  mover(e: MouseEvent) {
-    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width) * 100;
-    const y = ((e.clientY - r.top) / r.height) * 100;
-    this.origen.set(`${x}% ${y}%`);
   }
 
   agregar(p: Producto) {

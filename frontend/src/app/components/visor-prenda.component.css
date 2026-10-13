@@ -1,0 +1,47 @@
+:host { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+
+.escena { position: relative; flex: 1; min-height: 0; perspective: 1300px; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; outline: none; overflow: hidden; }
+.escena:focus-visible { box-shadow: inset 0 0 0 3px var(--rosa); }
+.escena.arrastrando { cursor: grabbing; }
+.escena.zoom { cursor: zoom-out; touch-action: none; }
+
+.giro { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.2, .8, .2, 1); will-change: transform; }
+.arrastrando .giro { transition: none; }
+.escena:not(.arrastrando):hover .giro { transition: transform .45s cubic-bezier(.2, .8, .2, 1); }
+.giro.presenta { animation: presenta 2.2s cubic-bezier(.45, .05, .35, 1) .45s both; }
+@keyframes presenta {
+  0% { transform: rotateY(0); }
+  30% { transform: translateZ(-30px) rotateY(-28deg); }
+  65% { transform: translateZ(-24px) rotateY(22deg); }
+  100% { transform: rotateY(0); }
+}
+
+.cara { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; }
+.espalda { transform: rotateY(180deg); }
+.cara img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; display: block; pointer-events: none; transition: transform .35s ease; filter: drop-shadow(0 18px 22px rgba(59, 42, 63, .16)); }
+.zoom .frente img { transform: scale(2.2); transition: transform .35s ease, transform-origin .1s linear; }
+.luz { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(100deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, .55) 50%, rgba(255, 255, 255, 0) 70%); mix-blend-mode: soft-light; transition: opacity .3s; }
+
+.sombra { position: absolute; left: 50%; bottom: 2.2%; width: 46%; height: 5%; border-radius: 50%; background: radial-gradient(closest-side, rgba(59, 42, 63, .28), rgba(59, 42, 63, 0)); transition: transform .7s cubic-bezier(.2, .8, .2, 1); pointer-events: none; }
+.arrastrando .sombra { transition: none; }
+
+.ficha-atras { position: absolute; inset: 9% 11%; background: rgba(255, 255, 255, .9); border: 1px solid var(--linea); border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 22px; text-align: center; color: var(--tinta); box-shadow: 0 24px 50px -30px rgba(59, 42, 63, .45); }
+.ficha-atras svg { color: var(--rosa-fuerte); }
+.ficha-atras strong { font: 600 20px/1.2 var(--serif); }
+.ficha-atras ul { list-style: none; margin: 4px 0; padding: 0; width: 100%; display: grid; gap: 8px; font-size: 14px; }
+.ficha-atras li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed var(--linea); padding-bottom: 7px; }
+.ficha-atras li span { color: var(--suave); }
+.ficha-atras .cap { text-transform: capitalize; }
+.pedir { margin-top: 4px; font: 600 13.5px var(--sans); color: #fff; background: #1FAF54; padding: 10px 16px; border-radius: 999px; text-decoration: none; }
+.pedir:hover { background: #179746; }
+
+.pista { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 7px; background: rgba(59, 42, 63, .82); color: #fff; font: 600 12px var(--sans); padding: 7px 13px; border-radius: 999px; pointer-events: none; white-space: nowrap; animation: late 2.4s ease-in-out .5s infinite; }
+@keyframes late { 50% { transform: translateX(-50%) scale(1.05); } }
+
+.controles { display: flex; justify-content: center; gap: 8px; padding: 10px; background: var(--blanco); border-top: 1px solid var(--linea); }
+.controles button { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--linea); background: #fff; color: var(--tinta); font: 600 13px var(--sans); padding: 9px 15px; border-radius: 999px; cursor: pointer; }
+.controles button:hover:not(:disabled) { border-color: var(--tinta); }
+.controles button:disabled { opacity: .45; cursor: not-allowed; }
+.controles button[aria-pressed="true"] { background: var(--tinta); color: #fff; border-color: var(--tinta); }
+
+@media (prefers-reduced-motion: reduce) { .giro, .sombra { transition: none; } .pista { animation: none; } }

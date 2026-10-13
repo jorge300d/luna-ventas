@@ -26,7 +26,7 @@ import { SITE, linkWhatsapp } from '../site.config';
         <ul class="items">
           @for (i of carrito.items(); track i.producto.id + i.talla) {
             <li>
-              <div class="mini" [style.background]="i.producto.color + '33'">
+              <div class="mini" [style.background]="i.producto.imagenUrl ? null : i.producto.color + '33'">
                 @if (i.producto.imagenUrl) {
                   <img [src]="i.producto.imagenUrl" [alt]="i.producto.nombre" />
                 } @else {

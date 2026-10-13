@@ -298,6 +298,7 @@ export class PanelComponent {
       tallas: p.tallas.split(',').map(t => t.trim()).filter(Boolean),
       color: p.color,
       imagenUrl: p.imagenUrl.trim() || null,
+      imagenEspaldaUrl: p.imagenEspaldaUrl.trim() || null,
       nuevo: p.nuevo,
       stock: Number(p.stock) || 0,
       largo: (p.largo || null) as Producto['largo'],
@@ -327,7 +328,7 @@ export class PanelComponent {
   }
 
   private prendaVacia() {
-    return { nombre: '', descripcion: '', categoria: 'blusas' as Categoria, precio: '', precioAntes: '', tallas: 'S, M, L', color: '#E8738F', imagenUrl: '', nuevo: true, stock: '1', largo: '' };
+    return { nombre: '', descripcion: '', categoria: 'blusas' as Categoria, precio: '', precioAntes: '', tallas: 'S, M, L', color: '#E8738F', imagenUrl: '', imagenEspaldaUrl: '', nuevo: true, stock: '1', largo: '' };
   }
 
   private refrescarResumen() {

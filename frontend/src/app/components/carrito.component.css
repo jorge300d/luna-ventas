@@ -9,7 +9,8 @@ header h2 { margin: 0; font: 600 24px var(--serif); }
 .items { list-style: none; margin: 0; padding: 8px 22px; overflow-y: auto; flex: 1; }
 .items li { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--linea); }
 .mini { width: 64px; height: 80px; border-radius: 12px; padding: 8px; overflow: hidden; }
-.mini img { width: calc(100% + 16px); height: calc(100% + 16px); margin: -8px; object-fit: cover; display: block; }
+.mini:has(img) { background: radial-gradient(120% 85% at 50% 28%, #FFFFFF 0%, #FCF4F0 50%, #F3E2E6 100%); }
+.mini img { width: calc(100% + 16px); height: calc(100% + 16px); margin: -8px; object-fit: contain; object-position: 50% 100%; display: block; }
 .det { display: flex; flex-direction: column; gap: 3px; font-size: 14px; }
 .det span { color: var(--suave); font-size: 13px; }
 .cant { display: inline-flex; align-items: center; gap: 10px; margin-top: 4px; }

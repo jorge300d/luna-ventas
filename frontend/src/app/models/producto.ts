@@ -10,6 +10,7 @@ export interface Producto {
   tallas: string[];
   color: string;       // color base para la tarjeta cuando no hay foto
   imagenUrl?: string | null;
+  imagenEspaldaUrl?: string | null; // foto de la espalda, se ve al voltear
   nuevo: boolean;
   stock: number;
   activo?: boolean;
