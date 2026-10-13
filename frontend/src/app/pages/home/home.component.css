@@ -168,5 +168,4 @@ h2 { font: 600 clamp(32px, 4.4vw, 50px)/1.08 var(--serif); letter-spacing: -.015
   .anuncio span:nth-child(3) { display: none; }
 }
 
-.wa-flot.alto { bottom: 150px; }
-@media (max-width: 720px) { .wa-flot.alto { bottom: 260px; } }
+@media (max-width: 480px) { .wa-flot.alto { bottom: 96px; } }
