@@ -1,5 +1,13 @@
 <a class="saltar" href="#inicio">Saltar al contenido</a>
 
+<div class="anuncio" role="note">
+  <div class="anuncio-in">
+    <span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z" fill="currentColor"/></svg>Ropa americana seleccionada</span>
+    <span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7" cy="17" r="1.6" fill="currentColor"/><circle cx="17" cy="17" r="1.6" fill="currentColor"/></svg>Recojo en Lince o delivery en Lima</span>
+    <span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19l1.2-3.6A7.5 7.5 0 1 1 9 18.6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Atención por WhatsApp</span>
+  </div>
+</div>
+
 <header class="nav" [class.scrolled]="scrolled()">
   <div class="wrap nav-in">
     <a href="#inicio" class="marca" aria-label="Luna Ventas, inicio">
@@ -7,7 +15,7 @@
       <span>Luna Ventas</span>
     </a>
     <nav [class.abierto]="menu()" (click)="menu.set(false)">
-      <a href="#categorias">Categorías</a>
+      @if (categoriasConStock().length >= 3) { <a href="#categorias">Categorías</a> }
       <a href="#catalogo">Catálogo</a>
       <a href="#lives">Lives</a>
       <a href="#como-comprar">Cómo comprar</a>
@@ -50,9 +58,15 @@
         <div class="tel">
           <div class="tel-top"><app-logo [size]="30" /><span>Luna Ventas</span></div>
           <div class="tel-card">
-            <div class="tel-foto"><app-prenda categoria="vestidos" color="#E8738F" /></div>
-            <div class="tel-info"><strong>Vestido midi estampado</strong><span>S/ 69 <s>S/ 85</s></span></div>
-            <div class="tel-tallas"><b>S</b><b class="on">M</b><b>L</b></div>
+            @if (destacado(); as d) {
+              <div class="tel-foto real"><img [src]="d.imagenUrl" alt="" /></div>
+              <div class="tel-info"><strong>{{ d.nombre }}</strong><span>S/ {{ d.precio }}</span></div>
+              <div class="tel-tallas">@for (t of d.tallas; track t) {<b class="on">{{ t }}</b>}<em>Pieza única</em></div>
+            } @else {
+              <div class="tel-foto"><app-prenda categoria="vestidos" color="#E8738F" /></div>
+              <div class="tel-info"><strong>Vestido midi</strong><span>S/ 30</span></div>
+              <div class="tel-tallas"><b>S</b><b class="on">M</b><b>L</b></div>
+            }
             <div class="tel-btn">Agregar al pedido</div>
           </div>
         </div>
@@ -64,17 +78,18 @@
   </section>
 
   <!-- CATEGORÍAS -->
+  @if (categoriasConStock().length >= 3) {
   <section id="categorias" class="sec">
     <div class="wrap">
       <p class="pre">Categorías</p>
       <h2>Lo que encuentras en Luna, sin vueltas.</h2>
       <p class="sub">Toca una categoría y te llevamos directo a esas prendas.</p>
       <div class="cats">
-        @for (c of categorias; track c.id; let i = $index) {
+        @for (c of categoriasConStock(); track c.id) {
           <button class="cat" (click)="verCategoria(c.id)">
-            <div class="cat-ico" [style.background]="colorCategoria(i) + '33'"><app-prenda [categoria]="c.id" [color]="colorCategoria(i)" /></div>
+            <div class="cat-ico" [style.background]="colorCategoria(c.i) + '33'"><app-prenda [categoria]="c.id" [color]="colorCategoria(c.i)" /></div>
             <h3>{{ c.nombre }}</h3>
-            <p>{{ c.detalle }}</p>
+            <p>{{ c.cantidad }} {{ c.cantidad === 1 ? 'prenda' : 'prendas' }} · {{ c.detalle }}</p>
             <span class="ver">Ver prendas →</span>
           </button>
         }
@@ -87,13 +102,14 @@
       </div>
     </div>
   </section>
+  }
 
   <!-- CATÁLOGO -->
   <section id="catalogo" class="sec sec-crema">
     <div class="wrap">
       <p class="pre">Catálogo</p>
-      <h2>Lo nuevo de esta semana.</h2>
-      <p class="sub">Elige talla, agrega al pedido y envíalo por WhatsApp. Te confirmamos stock al instante.</p>
+      <h2>Prendas disponibles.</h2>
+      <p class="sub">Ropa americana seleccionada: cada prenda es una pieza única. Toca «Ver» para ampliar la foto y conocer el detalle, y envía tu pedido por WhatsApp.</p>
       <app-catalogo />
     </div>
   </section>

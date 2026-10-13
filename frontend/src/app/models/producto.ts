@@ -13,6 +13,7 @@ export interface Producto {
   nuevo: boolean;
   stock: number;
   activo?: boolean;
+  largo?: 'corto' | 'midi' | 'maxi' | null;
 }
 
 export interface ItemCarrito {

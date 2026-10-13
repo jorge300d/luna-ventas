@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, inject, signal, viewChild } from '@angular/core';
+import { Component, HostListener, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { LogoComponent } from '../../components/logo.component';
 import { PrendaComponent } from '../../components/prenda.component';
@@ -7,6 +7,7 @@ import { CarritoComponent } from '../../components/carrito.component';
 import { ContactoComponent } from '../../components/contacto.component';
 import { PieLegalComponent } from '../../components/pie-legal.component';
 import { CarritoService } from '../../services/carrito.service';
+import { ProductosService } from '../../services/productos.service';
 import { CATEGORIAS, Categoria } from '../../models/producto';
 import { SITE, linkWhatsapp } from '../../site.config';
 
@@ -19,6 +20,17 @@ import { SITE, linkWhatsapp } from '../../site.config';
 })
 export class HomeComponent implements OnDestroy {
   carrito = inject(CarritoService);
+  productos = inject(ProductosService);
+
+  // solo se muestran las categorías que tienen prendas
+  categoriasConStock = computed(() => {
+    const lista = this.productos.productos();
+    return CATEGORIAS.map((c, i) => ({ ...c, i, cantidad: lista.filter(p => p.categoria === c.id).length }))
+      .filter(c => c.cantidad > 0);
+  });
+
+  // prenda real que aparece en la portada
+  destacado = computed(() => this.productos.productos().find(p => p.imagenUrl && p.stock > 0) ?? null);
   site = SITE;
   categorias = CATEGORIAS;
   catalogo = viewChild(CatalogoComponent);
@@ -49,7 +61,7 @@ export class HomeComponent implements OnDestroy {
   }
 
   verCategoria(c: Categoria) {
-    this.catalogo()?.filtro.set(c);
+    this.catalogo()?.filtrar(c);
     document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
   }
 

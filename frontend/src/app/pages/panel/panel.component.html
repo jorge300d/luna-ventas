@@ -305,6 +305,16 @@
                 <label>Link de la foto (opcional) <input name="pi" placeholder="https://…" [(ngModel)]="nuevaPrenda.imagenUrl" /></label>
                 <label>Color si no hay foto <input name="pco" type="color" [(ngModel)]="nuevaPrenda.color" /></label>
               </div>
+              <div class="dos">
+                <label>Largo (vestidos y faldas)
+                  <select name="pla" [(ngModel)]="nuevaPrenda.largo">
+                    <option value="">No aplica</option>
+                    <option value="corto">Corto</option>
+                    <option value="midi">Midi</option>
+                    <option value="maxi">Maxi</option>
+                  </select>
+                </label>
+              </div>
               <label class="chk"><input type="checkbox" name="pnu" [(ngModel)]="nuevaPrenda.nuevo" /> Es novedad (avisar a clientes)</label>
               <button class="btn btn-dark" type="submit">Publicar</button>
             </form>
