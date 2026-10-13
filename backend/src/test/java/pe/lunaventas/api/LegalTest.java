@@ -28,7 +28,7 @@ class LegalTest {
     void sinAceptarLaPoliticaNoSeRegistraElPedido() throws Exception {
         mvc.perform(post("/api/pedidos").contentType(MediaType.APPLICATION_JSON).content("""
                 {"cliente":"Sin acepto","telefono":"977000111","entrega":"tienda",
-                 "items":[{"productoId":1,"talla":"M","cantidad":1}]}
+                 "items":[{"productoId":17,"talla":"M","cantidad":1}]}
                 """)).andExpect(status().isBadRequest());
         assertThat(clientes.findByTelefono("51977000111")).isEmpty();
     }
@@ -37,7 +37,7 @@ class LegalTest {
     void guardaLaPruebaDeLosDosConsentimientos() throws Exception {
         mvc.perform(post("/api/pedidos").contentType(MediaType.APPLICATION_JSON).content("""
                 {"cliente":"Marta","telefono":"977000222","entrega":"tienda","aceptaPolitica":true,"aceptaOfertas":true,
-                 "items":[{"productoId":2,"talla":"M","cantidad":1}]}
+                 "items":[{"productoId":18,"talla":"M","cantidad":1}]}
                 """)).andExpect(status().isCreated());
         var c = clientes.findByTelefono("51977000222").orElseThrow();
         assertThat(c.getAceptaPoliticaEn()).isNotNull();

@@ -21,36 +21,38 @@ class ApiTest {
     void listaElCatalogoInicial() throws Exception {
         mvc.perform(get("/api/productos"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(12)));
+                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(11)));
         mvc.perform(get("/api/productos").param("categoria", "vestidos"))
                 .andExpect(jsonPath("$[*].categoria").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("vestidos"))));
     }
 
     @Test
-    void existenLasCategoriasPijamasYNinos() throws Exception {
-        mvc.perform(get("/api/productos").param("categoria", "pijamas"))
+    void elCatalogoRealTieneFotosYLargo() throws Exception {
+        mvc.perform(get("/api/productos/17"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
-        mvc.perform(get("/api/productos").param("categoria", "ninos"))
-                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
+                .andExpect(jsonPath("$.imagenUrl").value("/catalogo/vestido-01.webp"))
+                .andExpect(jsonPath("$.largo").value("midi"))
+                .andExpect(jsonPath("$.stock").value(1));
+        // las prendas de ejemplo ya no se muestran
+        mvc.perform(get("/api/productos/1")).andExpect(status().isNotFound());
     }
 
     @Test
     void elTotalSeCalculaConPreciosDeLaBase() throws Exception {
-        // producto 1 cuesta 35, se piden 2
+        // producto 17 cuesta 30, se piden 2
         String body = """
             {"cliente":"Rosa","telefono":"999888777","distrito":"Lince","entrega":"tienda","aceptaPolitica":true,
-             "items":[{"productoId":1,"talla":"M","cantidad":2}]}
+             "items":[{"productoId":17,"talla":"M","cantidad":2}]}
             """;
         mvc.perform(post("/api/pedidos").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.total").value(70));
+                .andExpect(jsonPath("$.total").value(60));
     }
 
     @Test
     void rechazaTallaQueNoExiste() throws Exception {
         String body = """
-            {"cliente":"Rosa","entrega":"tienda","aceptaPolitica":true,"items":[{"productoId":1,"talla":"XXL","cantidad":1}]}
+            {"cliente":"Rosa","entrega":"tienda","aceptaPolitica":true,"items":[{"productoId":17,"talla":"XXL","cantidad":1}]}
             """;
         mvc.perform(post("/api/pedidos").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isBadRequest());

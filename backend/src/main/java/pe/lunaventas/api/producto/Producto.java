@@ -47,6 +47,9 @@ public class Producto {
 
     private boolean activo = true;
 
+    @Pattern(regexp = "corto|midi|maxi")
+    private String largo;
+
     @Column(name = "creado_en", insertable = false, updatable = false)
     private OffsetDateTime creadoEn;
 
@@ -74,5 +77,7 @@ public class Producto {
     public void setStock(int stock) { this.stock = stock; }
     public boolean isActivo() { return activo; }
     public void setActivo(boolean activo) { this.activo = activo; }
+    public String getLargo() { return largo; }
+    public void setLargo(String largo) { this.largo = largo == null || largo.isBlank() ? null : largo; }
     public OffsetDateTime getCreadoEn() { return creadoEn; }
 }

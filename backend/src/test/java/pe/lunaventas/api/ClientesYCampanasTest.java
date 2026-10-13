@@ -36,7 +36,7 @@ class ClientesYCampanasTest {
     void elPedidoGuardaAlClienteConSuConsentimiento() throws Exception {
         String body = """
             {"cliente":"Carla Ruiz","telefono":"987 111 222","distrito":"Lince","entrega":"tienda","aceptaPolitica":true,
-             "aceptaOfertas":true,"items":[{"productoId":4,"talla":"M","cantidad":1}]}
+             "aceptaOfertas":true,"items":[{"productoId":17,"talla":"M","cantidad":1}]}
             """;
         mvc.perform(post("/api/pedidos").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated());
