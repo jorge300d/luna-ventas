@@ -4,6 +4,11 @@ import { catchError, of, switchMap, timeout } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { PedidoRequest, Producto } from '../models/producto';
 
+// las fotos vienen como "/catalogo/x.webp"; sin la barra inicial se resuelven contra el <base href>,
+// así también cargan cuando la web está en un subpath (GitHub Pages: /luna-ventas/)
+const sinBarra = (u?: string | null) => (u && !/^(https?:)?\/\//.test(u) ? u.replace(/^\/+/, '') : u);
+const rutaRelativa = (p: Producto): Producto => ({ ...p, imagenUrl: sinBarra(p.imagenUrl), imagenEspaldaUrl: sinBarra(p.imagenEspaldaUrl) });
+
 @Injectable({ providedIn: 'root' })
 export class ProductosService {
   private http = inject(HttpClient);
@@ -23,7 +28,7 @@ export class ProductosService {
       }),
       catchError(() => of([] as Producto[])),
     ).subscribe(lista => {
-      this.productos.set(lista);
+      this.productos.set(lista.map(rutaRelativa));
       this.cargando.set(false);
     });
   }

@@ -3,13 +3,14 @@ import { Producto } from '../models/producto';
 import { CarritoService } from '../services/carrito.service';
 import { PrendaComponent } from './prenda.component';
 import { VisorPrendaComponent } from './visor-prenda.component';
+import { ZoomFotoComponent } from './zoom-foto.component';
 import { linkWhatsapp } from '../site.config';
 
 // ficha de la prenda: visor que gira y se voltea, detalles, talla y botones de compra
 @Component({
   selector: 'app-producto-detalle',
   standalone: true,
-  imports: [PrendaComponent, VisorPrendaComponent],
+  imports: [PrendaComponent, VisorPrendaComponent, ZoomFotoComponent],
   template: `
     @if (producto(); as p) {
       <div class="velo" (click)="cerrar.emit()"></div>
@@ -20,7 +21,7 @@ import { linkWhatsapp } from '../site.config';
 
         <div class="foto">
           @if (p.imagenUrl) {
-            <app-visor-prenda [producto]="p" />
+            <app-visor-prenda [producto]="p" (ampliar)="zoomSrc.set($event)" />
           } @else {
             <div class="silueta"><app-prenda [categoria]="p.categoria" [color]="p.color" /></div>
           }
@@ -76,6 +77,9 @@ import { linkWhatsapp } from '../site.config';
           }
         </div>
       </div>
+      @if (zoomSrc(); as z) {
+        <app-zoom-foto [src]="z" [alt]="p.nombre" (cerrar)="zoomSrc.set(null)" />
+      }
     }
   `,
   styleUrl: './producto-detalle.component.css',
@@ -88,6 +92,7 @@ export class ProductoDetalleComponent {
   largos = ['corto', 'midi', 'maxi'] as const;
   talla = signal('');
   agregado = signal(false);
+  zoomSrc = signal<string | null>(null);
 
   constructor() {
     // al abrir otra prenda se reinicia la ficha y se bloquea el scroll de fondo
@@ -95,13 +100,15 @@ export class ProductoDetalleComponent {
       const p = this.producto();
       this.talla.set(p?.tallas[0] ?? '');
       this.agregado.set(false);
+      this.zoomSrc.set(null);
       document.body.style.overflow = p ? 'hidden' : '';
     });
   }
 
   @HostListener('document:keydown.escape')
   esc() {
-    if (this.producto()) this.cerrar.emit();
+    if (this.zoomSrc()) this.zoomSrc.set(null);
+    else if (this.producto()) this.cerrar.emit();
   }
 
   nivel(l: string) {

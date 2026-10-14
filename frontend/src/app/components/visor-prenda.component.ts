@@ -1,4 +1,4 @@
-import { Component, computed, effect, input, signal } from '@angular/core';
+import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { Producto } from '../models/producto';
 import { linkWhatsapp } from '../site.config';
 
@@ -10,7 +10,7 @@ import { linkWhatsapp } from '../site.config';
   template: `
     @if (producto(); as p) {
       <div class="escena estudio"
-        [class.arrastrando]="arrastrando()" [class.zoom]="zoom()"
+        [class.arrastrando]="arrastrando()"
         tabindex="0" role="img" [attr.aria-label]="p.nombre + '. Arrastra para girar la prenda.'"
         (pointerdown)="bajar($event)" (pointermove)="mover($event)" (pointerup)="subir($event)" (pointercancel)="subir($event)"
         (pointerleave)="salir()" (keydown)="tecla($event)">
@@ -19,7 +19,7 @@ import { linkWhatsapp } from '../site.config';
 
         <div class="giro" [class.presenta]="presenta()" [style.transform]="transformacion()">
           <div class="cara frente">
-            <img [src]="p.imagenUrl" [alt]="p.nombre" draggable="false" [style.transform-origin]="origen()" />
+            <img [src]="p.imagenUrl" [alt]="p.nombre" draggable="false" />
             <span class="luz" [style.opacity]="luz()"></span>
           </div>
           <div class="cara espalda">
@@ -55,11 +55,12 @@ import { linkWhatsapp } from '../site.config';
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2M21 12a9 9 0 0 1-15.5 6.2M18.5 2v4h-4M5.5 22v-4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           {{ deEspaldas() ? 'Ver frente' : 'Voltear' }}
         </button>
-        <button type="button" (click)="alternarZoom()" [disabled]="deEspaldas()" [attr.aria-pressed]="zoom()">
-          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4M8 11h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>@if (!zoom()) {<path d="M11 8v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>}</svg>
-          {{ zoom() ? 'Alejar' : 'Acercar' }}
+        <button type="button" (click)="ampliar.emit(fotoActual(p)!)" [disabled]="!fotoActual(p)">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4M8 11h6M11 8v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Zoom
         </button>
       </div>
+
     }
   `,
   styleUrl: './visor-prenda.component.css',
@@ -71,8 +72,7 @@ export class VisorPrendaComponent {
   ladeoY = signal(0);          // inclinación suave al pasar el mouse
   ladeoX = signal(0);
   arrastrando = signal(false);
-  zoom = signal(false);
-  origen = signal('50% 50%');
+  ampliar = output<string>();
   pista = signal(true);
   presenta = signal(true);
 
@@ -100,7 +100,6 @@ export class VisorPrendaComponent {
     effect(() => {
       this.producto();
       this.angulo.set(0);
-      this.zoom.set(false);
       this.pista.set(true);
       this.presenta.set(!matchMedia('(prefers-reduced-motion: reduce)').matches);
     });
@@ -109,8 +108,6 @@ export class VisorPrendaComponent {
   bajar(e: PointerEvent) {
     if (e.button !== 0) return;
     this.presenta.set(false);
-    // con la foto acercada, un toque la vuelve a alejar
-    if (this.zoom()) { this.zoom.set(false); return; }
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     this.arrastrando.set(true);
     this.inicioX = e.clientX;
@@ -121,7 +118,6 @@ export class VisorPrendaComponent {
   }
 
   mover(e: PointerEvent) {
-    if (this.zoom()) { this.moverZoom(e); return; }
     if (this.arrastrando()) {
       const dx = e.clientX - this.inicioX;
       this.movido = Math.max(this.movido, Math.abs(dx));
@@ -142,8 +138,9 @@ export class VisorPrendaComponent {
     if (!this.arrastrando()) return;
     this.arrastrando.set(false);
     if (this.movido < 6) {
-      // fue un toque, no un arrastre: acerca la foto
-      if (!this.deEspaldas()) { this.moverZoom(e); this.zoom.set(true); }
+      // fue un toque, no un arrastre: abre el zoom
+      const f = this.fotoActual(this.producto()!);
+      if (f) this.ampliar.emit(f);
       return;
     }
     // termina mirando de frente o de espaldas, lo que quede más cerca
@@ -159,14 +156,11 @@ export class VisorPrendaComponent {
   voltear() {
     this.presenta.set(false);
     this.pista.set(false);
-    this.zoom.set(false);
     this.angulo.set(Math.round(this.angulo() / 180) * 180 + 180);
   }
 
-  alternarZoom() {
-    this.presenta.set(false);
-    this.origen.set('50% 40%');
-    this.zoom.update(z => !z);
+  fotoActual(p: Producto) {
+    return this.deEspaldas() ? p.imagenEspaldaUrl : p.imagenUrl;
   }
 
   tecla(e: KeyboardEvent) {
@@ -178,10 +172,5 @@ export class VisorPrendaComponent {
 
   pedirEspalda(p: Producto) {
     return linkWhatsapp(`Hola Luna Ventas, ¿me envían una foto de la espalda del ${p.nombre}?`);
-  }
-
-  private moverZoom(e: PointerEvent) {
-    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    this.origen.set(`${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`);
   }
 }
