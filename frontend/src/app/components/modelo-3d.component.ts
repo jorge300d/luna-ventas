@@ -1,8 +1,9 @@
 import { Component, DestroyRef, ElementRef, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { Producto } from '../models/producto';
 
-// Modelo 3D de una chica con el vestido puesto, que gira de verdad 360°.
-// El cuerpo cambia según la talla, el largo según corto/midi/maxi y el estampado se toma de la foto real.
+// La prenda en 3D a partir de su foto real: la silueta de la foto se "infla" en volumen
+// (cada fila es un óvalo, como un cuerpo) y la foto se pega encima, así de frente se ve el diseño exacto
+// y al girar tiene grosor de verdad. Atrás se ve la misma tela un poco más oscura (solo hay foto del frente).
 // three.js se carga una sola vez desde cdnjs; si no carga, avisa para volver a la foto.
 const THREE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
 let promesaThree: Promise<any> | null = null;
@@ -19,10 +20,22 @@ const cargarThree = (): Promise<any> => {
   return promesaThree;
 };
 
+const cargarImagen = (url: string) => new Promise<HTMLImageElement | null>(ok => {
+  const img = new Image();
+  img.onload = () => ok(img);
+  img.onerror = () => ok(null);
+  img.src = url;
+});
+
+const COLUMNAS = 150;     // resolución de la malla
+const PROFUNDIDAD = 0.78; // grosor del cuerpo respecto a su ancho
+const ALTO = 2;           // alto de la foto en unidades 3D
+const FOV = 18;           // lente cerrada: casi sin deformar la foto de frente
+
 @Component({
   selector: 'app-modelo-3d',
   standalone: true,
-  template: `<div #caja class="caja" role="img" [attr.aria-label]="'Modelo 3D con ' + producto().nombre"></div>`,
+  template: `<div #caja class="caja" role="img" [attr.aria-label]="producto().nombre + ' en 3D'"></div>`,
   styles: [':host{display:block;width:100%;height:100%} .caja{width:100%;height:100%;pointer-events:none} :host ::ng-deep canvas{width:100%!important;height:100%!important;display:block}'],
 })
 export class Modelo3dComponent {
@@ -32,19 +45,20 @@ export class Modelo3dComponent {
 
   private caja = viewChild.required<ElementRef<HTMLDivElement>>('caja');
   private lista = signal(false);   // three.js y la escena ya están armados
-  private refresco = signal(0);     // sube cuando hay que volver a dibujar
+  private refresco = signal(0);    // sube cuando hay que volver a dibujar
   private T: any;
   private renderer: any;
   private escena: any;
   private camara: any;
   private figura: any = null;
   private sombra: any = null;
+  private ancho = 1.5;
+  private grosor = 0.3;
   private token = 0;
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => { this.renderer?.dispose(); this.renderer?.domElement.remove(); });
+    inject(DestroyRef).onDestroy(() => { this.limpiar(); this.renderer?.dispose(); this.renderer?.domElement.remove(); });
 
-    // arma la escena la primera vez
     cargarThree().then(T => {
       this.T = T;
       const cont = this.caja().nativeElement;
@@ -52,23 +66,22 @@ export class Modelo3dComponent {
       this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
       cont.appendChild(this.renderer.domElement);
       this.escena = new T.Scene();
-      this.camara = new T.PerspectiveCamera(30, 1, 0.1, 50);
-      this.camara.position.set(0, 0.95, 4.3);
-      this.camara.lookAt(0, 0.86, 0);
-      this.escena.add(new T.HemisphereLight(0xffffff, 0xe8c9d4, 0.85));
-      const sol = new T.DirectionalLight(0xffffff, 0.8);
-      sol.position.set(2, 3, 4);
+      this.camara = new T.PerspectiveCamera(FOV, 1, 0.1, 100);
+      // luz pareja de frente (la foto ya trae su propia luz) y un poco de lado para que se note el volumen al girar
+      this.escena.add(new T.AmbientLight(0xffffff, 0.6));
+      const sol = new T.DirectionalLight(0xffffff, 0.45);
+      sol.position.set(1, 1.5, 4);
       this.escena.add(sol);
       new ResizeObserver(() => this.ajustar()).observe(cont);
       this.ajustar();
       this.lista.set(true);
     }).catch(() => this.falla.emit());
 
-    // cada vez que cambia la prenda, se viste otra vez a la modelo
+    // cada vez que cambia la prenda se arma su volumen
     effect(() => {
       const p = this.producto();
       if (!this.lista()) return;
-      this.vestir(p);
+      this.armar(p);
     });
 
     effect(() => {
@@ -85,7 +98,13 @@ export class Modelo3dComponent {
     const c = this.caja().nativeElement;
     const w = Math.max(1, c.clientWidth), h = Math.max(1, c.clientHeight);
     this.renderer.setSize(w, h, false);
-    this.camara.aspect = w / h;
+    const asp = w / h;
+    const t = Math.tan(((FOV / 2) * Math.PI) / 180);
+    // encaja la foto completa como un object-fit: contain, con margen para el grosor
+    const dist = Math.max(ALTO / 2 / t, this.ancho / 2 / (t * asp)) * 1.03 + this.grosor;
+    this.camara.aspect = asp;
+    this.camara.position.set(0, ALTO / 2, dist);
+    this.camara.lookAt(0, ALTO / 2, 0);
     this.camara.updateProjectionMatrix();
     this.dibujar();
   }
@@ -94,133 +113,180 @@ export class Modelo3dComponent {
     if (this.renderer && this.escena) this.renderer.render(this.escena, this.camara);
   }
 
-  // talla -> ancho del cuerpo
-  private factorTalla(tallas: string[]) {
-    const t = (tallas[0] ?? 'M').toUpperCase();
-    if (t.includes('XL')) return 1.16;
-    if (t.includes('M/L')) return 1.04;
-    if (t.startsWith('L')) return 1.09;
-    if (t.includes('XS')) return 0.88;
-    if (t.startsWith('S')) return 0.94;
-    return 1;
-  }
-
-  // recorta de la foto un trozo de tela (centro del vestido, sin brazos del maniquí)
-  private textura(p: Producto): Promise<any> {
-    return new Promise(ok => {
-      const img = new Image();
-      img.onload = () => {
-        try {
-          const w = img.naturalWidth, h = img.naturalHeight;
-          const c = document.createElement('canvas');
-          c.width = w; c.height = h;
-          const g = c.getContext('2d')!;
-          g.drawImage(img, 0, 0);
-          const d = g.getImageData(0, 0, w, h).data;
-          let x0 = w, x1 = 0, y0 = h, y1 = 0;
-          for (let y = 0; y < h; y += 4) for (let x = 0; x < w; x += 2) {
-            if (d[(y * w + x) * 4 + 3] > 24) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-          }
-          const bw = x1 - x0, bh = y1 - y0, cx = (x0 + x1) / 2;
-          const sx = Math.round(cx - bw * 0.14), sw = Math.round(bw * 0.28);
-          const sy = Math.round(y0 + bh * 0.42), sh = Math.round(bh * 0.54);
-          const parche = document.createElement('canvas');
-          parche.width = 256; parche.height = 512;
-          parche.getContext('2d')!.drawImage(img, sx, sy, sw, sh, 0, 0, 256, 512);
-          const tex = new this.T.CanvasTexture(parche);
-          tex.wrapS = this.T.MirroredRepeatWrapping;
-          tex.wrapT = this.T.ClampToEdgeWrapping;
-          tex.repeat.set(3, 1);
-          ok(tex);
-        } catch { ok(null); } // foto de otro dominio: usa el color de la prenda
-      };
-      img.onerror = () => ok(null);
-      img.src = p.imagenUrl ?? '';
-    });
-  }
-
-  private async vestir(p: Producto) {
+  private async armar(p: Producto) {
     const mi = ++this.token;
-    const tex = await this.textura(p);
+    const img = p.imagenUrl ? await cargarImagen(p.imagenUrl) : null;
     if (mi !== this.token) return;
+    if (!img) { this.falla.emit(); return; }
+    let hecho: { malla: any; ancho: number; grosor: number; piso: number; base: number };
+    try {
+      hecho = this.volumen(img);
+    } catch {
+      this.falla.emit(); // foto de otro dominio: no se puede leer su silueta
+      return;
+    }
+    this.limpiar();
+    this.figura = hecho.malla;
+    this.figura.rotation.y = (this.angulo() * Math.PI) / 180;
+    this.escena.add(this.figura);
+    this.sombra = this.sombraPiso(hecho.base, hecho.piso);
+    this.escena.add(this.sombra);
+    this.ancho = hecho.ancho;
+    this.grosor = hecho.grosor;
+    this.ajustar();
+    this.refresco.update(n => n + 1);
+  }
+
+  // convierte la silueta de la foto en una malla con volumen y la foto pegada encima
+  private volumen(img: HTMLImageElement) {
     const T = this.T;
-    if (this.figura) {
-      this.escena.remove(this.figura);
-      this.figura.traverse((o: any) => { o.geometry?.dispose(); });
+    const gw = COLUMNAS, gh = Math.round((COLUMNAS * img.naturalHeight) / img.naturalWidth);
+    const c = document.createElement('canvas');
+    c.width = gw; c.height = gh;
+    const g = c.getContext('2d')!;
+    g.drawImage(img, 0, 0, gw, gh);
+    const alfa = g.getImageData(0, 0, gw, gh).data;
+    const n = gw * gh;
+    const dentro = new Uint8Array(n);
+    for (let k = 0; k < n; k++) dentro[k] = alfa[k * 4 + 3] > 110 ? 1 : 0;
+
+    // grosor: cada tramo de cada fila es un óvalo (torso, brazos, falda...)
+    const z = new Float32Array(n);
+    const radio = new Float32Array(n);
+    let sumaX = 0, cuenta = 0, ultimaFila = 0;
+    for (let j = 0; j < gh; j++) {
+      let i = 0;
+      while (i < gw) {
+        if (!dentro[j * gw + i]) { i++; continue; }
+        let f = i;
+        while (f + 1 < gw && dentro[j * gw + f + 1]) f++;
+        const medio = (f - i + 1) / 2, centro = (i + f) / 2;
+        for (let x = i; x <= f; x++) {
+          const dx = x - centro;
+          z[j * gw + x] = PROFUNDIDAD * Math.sqrt(Math.max(0, medio * medio - dx * dx));
+          radio[j * gw + x] = medio;
+          sumaX += x; cuenta++;
+        }
+        ultimaFila = j;
+        i = f + 1;
+      }
     }
 
-    const k = this.factorTalla(p.tallas);
-    const piel = new T.MeshStandardMaterial({ color: 0xe9c7b4, roughness: 0.8 });
-    const pelo = new T.MeshStandardMaterial({ color: 0x3a2622, roughness: 0.7 });
-    const tela = new T.MeshStandardMaterial({ color: tex ? 0xffffff : new T.Color(p.color), map: tex, roughness: 0.85, side: T.DoubleSide });
-    const zapato = new T.MeshStandardMaterial({ color: 0x2e2a2d, roughness: 0.6 });
-
-    const f = new T.Group();
-    const poner = (geo: any, mat: any, x = 0, y = 0, z = 0, rz = 0) => {
-      const m = new T.Mesh(geo, mat);
-      m.position.set(x, y, z);
-      m.rotation.z = rz;
-      f.add(m);
-      return m;
-    };
-    const lathe = (pts: number[][], esc = k) =>
-      new T.LatheGeometry(pts.map(([r, y]) => new T.Vector2(r * esc, y)), 56);
-
-    // cabeza, pelo y cuello
-    const cabeza = poner(new T.SphereGeometry(0.105, 32, 24), piel, 0, 1.6, 0);
-    cabeza.scale.set(0.92, 1.12, 1);
-    const cabello = poner(new T.SphereGeometry(0.113, 32, 24), pelo, 0, 1.615, -0.026);
-    cabello.scale.set(0.98, 1.1, 1);
-    poner(new T.SphereGeometry(0.05, 20, 16), pelo, 0, 1.72, -0.07);
-    poner(new T.CylinderGeometry(0.038, 0.044, 0.1, 20), piel, 0, 1.49, 0);
-
-    // torso (debajo del vestido)
-    poner(lathe([[0, 1.47], [0.06, 1.46], [0.14, 1.42], [0.165, 1.33], [0.15, 1.22], [0.125, 1.12], [0.15, 1.0], [0.16, 0.88]]), piel);
-
-    // vestido: corpiño ceñido y falda con vuelo según el largo
-    const hem = { corto: [0.62, 0.3], midi: [0.42, 0.34], maxi: [0.1, 0.37] }[p.largo ?? 'midi'] ?? [0.42, 0.34];
-    const perfil: number[][] = [[0.152, 1.4], [0.177, 1.33], [0.162, 1.22], [0.137, 1.12], [0.162, 1.0]];
-    for (let i = 1; i <= 8; i++) {
-      const t = i / 8;
-      perfil.push([0.162 + (hem[1] - 0.162) * Math.pow(t, 0.8), 1.0 + (hem[0] - 1.0) * t]);
-    }
-    poner(lathe(perfil), tela);
-
-    // mangas cortas, hombros y brazos
-    for (const s of [-1, 1]) {
-      poner(new T.SphereGeometry(0.05, 20, 16), piel, s * 0.19, 1.385, 0);
-      const manga = poner(new T.CylinderGeometry(0.052, 0.06, 0.13, 20, 1, true), tela, s * 0.215, 1.335, 0, s * 0.28);
-      manga.scale.set(1, 1, 1);
-      poner(new T.CylinderGeometry(0.034, 0.027, 0.5, 16), piel, s * 0.245, 1.07, 0, s * 0.06);
-      poner(new T.SphereGeometry(0.034, 16, 12), piel, s * 0.262, 0.8, 0);
+    // redondea los bordes de arriba y abajo (cabeza, hombros, manos, ruedo) para que no queden cortes planos
+    const arriba = new Float32Array(gh);
+    for (let i = 0; i < gw; i++) {
+      let d = 0;
+      for (let j = 0; j < gh; j++) { d = dentro[j * gw + i] ? d + 1 : 0; arriba[j] = d; }
+      d = 0;
+      for (let j = gh - 1; j >= 0; j--) {
+        const k = j * gw + i;
+        d = dentro[k] ? d + 1 : 0;
+        const rv = Math.min(8, radio[k]);
+        const dv = Math.min(arriba[j], d);
+        if (dv > 0 && dv < rv) {
+          const t = 1 - dv / rv;
+          z[k] *= Math.sqrt(1 - t * t);
+        }
+      }
     }
 
-    // piernas y zapatos
-    for (const s of [-1, 1]) {
-      poner(new T.CylinderGeometry(0.058, 0.04, 0.88, 20), piel, s * 0.075, 0.45, 0);
-      const z = poner(new T.SphereGeometry(0.05, 20, 14), zapato, s * 0.075, 0.03, 0.035);
-      z.scale.set(0.9, 0.55, 1.7);
+    // suaviza para que no se noten escalones entre filas
+    for (let pasada = 0; pasada < 3; pasada++) {
+      const b = z.slice();
+      for (let j = 1; j < gh - 1; j++) {
+        for (let i = 1; i < gw - 1; i++) {
+          const k = j * gw + i;
+          if (!dentro[k]) continue;
+          let s = 0, m = 0;
+          for (let dj = -1; dj <= 1; dj++) {
+            for (let di = -1; di <= 1; di++) {
+              const q = k + dj * gw + di;
+              if (dentro[q]) { s += b[q]; m++; }
+            }
+          }
+          z[k] = s / m;
+        }
+      }
     }
 
-    // sombra suave en el piso
+    // malla: cara de adelante con la foto y cara de atrás con la misma tela
+    const ancho = (ALTO * img.naturalWidth) / img.naturalHeight;
+    const paso = ancho / (gw - 1);
+    const eje = (cuenta ? sumaX / cuenta : gw / 2) * paso; // gira sobre el centro de la prenda, no de la foto
+    const pos = new Float32Array(n * 2 * 3);
+    const uv = new Float32Array(n * 2 * 2);
+    let grosor = 0;
+    for (let j = 0; j < gh; j++) {
+      for (let i = 0; i < gw; i++) {
+        const k = j * gw + i;
+        const x = i * paso - eje, y = ALTO - (j * ALTO) / (gh - 1), zz = z[k] * paso;
+        if (zz > grosor) grosor = zz;
+        pos[k * 3] = x; pos[k * 3 + 1] = y; pos[k * 3 + 2] = zz;
+        pos[(n + k) * 3] = x; pos[(n + k) * 3 + 1] = y; pos[(n + k) * 3 + 2] = -zz;
+        const u = i / (gw - 1), v = 1 - j / (gh - 1);
+        uv[k * 2] = u; uv[k * 2 + 1] = v;
+        uv[(n + k) * 2] = u; uv[(n + k) * 2 + 1] = v;
+      }
+    }
+    const frente: number[] = [], atras: number[] = [];
+    for (let j = 0; j < gh - 1; j++) {
+      for (let i = 0; i < gw - 1; i++) {
+        const a = j * gw + i, b = a + 1, cc = a + gw, d = cc + 1;
+        if (!(dentro[a] || dentro[b] || dentro[cc] || dentro[d])) continue;
+        frente.push(a, cc, b, b, cc, d);
+        atras.push(n + a, n + b, n + cc, n + b, n + d, n + cc);
+      }
+    }
+    const geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.BufferAttribute(pos, 3));
+    geo.setAttribute('uv', new T.BufferAttribute(uv, 2));
+    geo.setIndex(frente.concat(atras));
+    geo.addGroup(0, frente.length, 0);
+    geo.addGroup(frente.length, atras.length, 1);
+    geo.computeVertexNormals();
+
+    const tex = new T.Texture(img);
+    tex.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+    tex.needsUpdate = true;
+    const materiales = [
+      new T.MeshLambertMaterial({ map: tex, alphaTest: 0.5 }),
+      new T.MeshLambertMaterial({ map: tex, alphaTest: 0.5, color: 0xe4dde1 }),
+    ];
+
+    // ancho de la prenda abajo, para la sombra
+    let iz = gw, de = 0;
+    for (let i = 0; i < gw; i++) if (dentro[ultimaFila * gw + i]) { iz = Math.min(iz, i); de = Math.max(de, i); }
+    const base = Math.max(0.3, (de - iz) * paso);
+    const piso = ALTO - (ultimaFila * ALTO) / (gh - 1);
+
+    return { malla: new T.Mesh(geo, materiales), ancho, grosor, piso, base };
+  }
+
+  // sombra suave en el piso, debajo del ruedo
+  private sombraPiso(base: number, piso: number) {
+    const T = this.T;
     const c = document.createElement('canvas');
     c.width = c.height = 128;
     const g = c.getContext('2d')!;
     const gr = g.createRadialGradient(64, 64, 4, 64, 64, 62);
-    gr.addColorStop(0, 'rgba(59,42,63,.35)');
+    gr.addColorStop(0, 'rgba(59,42,63,.32)');
     gr.addColorStop(1, 'rgba(59,42,63,0)');
     g.fillStyle = gr;
     g.fillRect(0, 0, 128, 128);
-    const sombra = new T.Mesh(new T.PlaneGeometry(0.9, 0.9), new T.MeshBasicMaterial({ map: new T.CanvasTexture(c), transparent: true, depthWrite: false }));
-    sombra.rotation.x = -Math.PI / 2;
-    sombra.position.y = 0.002;
+    const s = new T.Mesh(new T.PlaneGeometry(base * 1.5, base * 1.5), new T.MeshBasicMaterial({ map: new T.CanvasTexture(c), transparent: true, depthWrite: false }));
+    s.rotation.x = -Math.PI / 2;
+    s.position.y = piso - 0.01;
+    return s;
+  }
 
-    f.rotation.y = (this.angulo() * Math.PI) / 180;
-    if (this.sombra) this.escena.remove(this.sombra);
-    this.sombra = sombra;
-    this.figura = f;
-    this.escena.add(f);
-    this.escena.add(sombra);
-    this.refresco.update(n => n + 1);
+  private limpiar() {
+    for (const o of [this.figura, this.sombra]) {
+      if (!o) continue;
+      this.escena?.remove(o);
+      o.geometry?.dispose();
+      for (const m of Array.isArray(o.material) ? o.material : [o.material]) { m.map?.dispose(); m.dispose(); }
+    }
+    this.figura = null;
+    this.sombra = null;
   }
 }

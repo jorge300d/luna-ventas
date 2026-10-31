@@ -83,7 +83,7 @@ import { linkWhatsapp } from '../site.config';
         @if (conModelo()) {
           <button type="button" (click)="modelo.set(!modelo())" [attr.aria-pressed]="modelo()">
             <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="6" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 21l1.5-9h3L15 21M8 11l4-2 4 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            {{ modelo() ? 'Ver foto' : 'Ver en modelo' }}
+            {{ modelo() ? 'Ver foto' : 'Ver en 3D' }}
           </button>
         }
         <button type="button" (click)="ampliar.emit(fotoActual(p)!)" [disabled]="!fotoActual(p)">
@@ -128,8 +128,8 @@ export class VisorPrendaComponent {
   es360 = computed(() => (this.producto()?.fotos360?.length ?? 0) >= 8);
   falso = computed(() => !this.es360() && !!this.producto()?.imagenUrl && !this.producto()?.imagenEspaldaUrl); // un 360° simulado desde una sola foto
   girable = computed(() => this.es360() || this.falso());
-  modelo = signal(true);   // modelo 3D con el vestido puesto; si no carga o se apaga, queda la foto
-  conModelo = computed(() => this.falso() && this.producto()?.categoria === 'vestidos');
+  modelo = signal(true);   // la prenda en 3D hecha desde su foto; si no carga o se apaga, queda la foto girando
+  conModelo = computed(() => this.falso());
   es3d = computed(() => this.conModelo() && this.modelo());
   fotoIndice = computed(() => {
     const n = this.producto()?.fotos360?.length ?? 1;
