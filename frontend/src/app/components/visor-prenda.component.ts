@@ -1,7 +1,5 @@
 import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { Producto } from '../models/producto';
-import { GiroFalsoComponent } from './giro-falso.component';
-import { Modelo3dComponent } from './modelo-3d.component';
 import { linkWhatsapp } from '../site.config';
 
 // visor de la prenda: se inclina con el mouse, gira al arrastrar y se puede voltear
@@ -9,7 +7,6 @@ import { linkWhatsapp } from '../site.config';
 @Component({
   selector: 'app-visor-prenda',
   standalone: true,
-  imports: [GiroFalsoComponent, Modelo3dComponent],
   template: `
     @if (producto(); as p) {
       <div class="escena estudio"
@@ -20,21 +17,6 @@ import { linkWhatsapp } from '../site.config';
 
         <div class="sombra" [style.transform]="'translateX(-50%) scaleX(' + escalaSombra() + ')'"></div>
 
-        @if (girable()) {
-          <div class="cara frente">
-            @if (es360()) {
-              <img [src]="fotoActual(p)" [alt]="p.nombre + ', vista ' + (fotoIndice() + 1) + ' de ' + p.fotos360!.length" draggable="false" />
-            } @else {
-              @if (es3d()) {
-                <app-modelo-3d [producto]="p" [angulo]="angulo()" (falla)="modelo.set(false)" />
-              } @else {
-                <app-giro-falso [src]="p.imagenUrl!" [alt]="p.nombre" [angulo]="angulo()" />
-              }
-            }
-          </div>
-          <span class="sello360" aria-hidden="true">360°</span>
-          @if (es3d()) { <span class="vista" [class.atras]="deEspaldas()">{{ deEspaldas() ? 'Espalda recreada' : 'Frente real' }}</span> }
-        } @else {
         <div class="giro" [class.presenta]="presenta()" [style.transform]="transformacion()">
           <div class="cara frente">
             <img [src]="p.imagenUrl" [alt]="p.nombre" draggable="false" />
@@ -59,7 +41,6 @@ import { linkWhatsapp } from '../site.config';
             }
           </div>
         </div>
-        }
 
         @if (pista()) {
           <span class="pista" aria-hidden="true">
@@ -70,23 +51,10 @@ import { linkWhatsapp } from '../site.config';
       </div>
 
       <div class="controles">
-        @if (girable()) {
-          <button type="button" (click)="alternarGiro()" [attr.aria-pressed]="girando()">
-            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2M21 12a9 9 0 0 1-15.5 6.2M18.5 2v4h-4M5.5 22v-4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            {{ girando() ? 'Pausar' : 'Girar 360°' }}
-          </button>
-        } @else {
         <button type="button" (click)="voltear()" [attr.aria-pressed]="deEspaldas()">
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2M21 12a9 9 0 0 1-15.5 6.2M18.5 2v4h-4M5.5 22v-4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           {{ deEspaldas() ? 'Ver frente' : 'Voltear' }}
         </button>
-        }
-        @if (conModelo()) {
-          <button type="button" (click)="modelo.set(!modelo())" [attr.aria-pressed]="modelo()">
-            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="6" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 21l1.5-9h3L15 21M8 11l4-2 4 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            {{ modelo() ? 'Ver foto' : 'Ver en 3D' }}
-          </button>
-        }
         <button type="button" (click)="ampliar.emit(fotoActual(p)!)" [disabled]="!fotoActual(p)">
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4M8 11h6M11 8v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           Zoom
@@ -111,7 +79,6 @@ export class VisorPrendaComponent {
   private inicioX = 0;
   private inicioAngulo = 0;
   private movido = 0;
-  private animacion = 0;
 
   deEspaldas = computed(() => {
     const a = ((this.angulo() % 360) + 360) % 360;
@@ -125,20 +92,6 @@ export class VisorPrendaComponent {
     return `translateZ(${-lejos}px) rotateX(${this.ladeoX()}deg) rotateY(${y}deg)`;
   });
 
-  // visor 360°: si la prenda trae una secuencia de fotos, el ángulo elige la foto
-  girando = signal(false);
-  es360 = computed(() => (this.producto()?.fotos360?.length ?? 0) >= 8);
-  falso = computed(() => !this.es360() && !!this.producto()?.imagenUrl && !this.producto()?.imagenEspaldaUrl); // un 360° simulado desde una sola foto
-  girable = computed(() => this.es360() || this.falso());
-  modelo = signal(true);   // la prenda en 3D hecha desde su foto; si no carga o se apaga, queda la foto girando
-  conModelo = computed(() => this.falso());
-  es3d = computed(() => this.conModelo() && this.modelo());
-  fotoIndice = computed(() => {
-    const n = this.producto()?.fotos360?.length ?? 1;
-    const a = ((this.angulo() % 360) + 360) % 360;
-    return Math.floor((a / 360) * n) % n;
-  });
-
   luz = computed(() => Math.abs(Math.sin(((this.angulo() + this.ladeoY()) * Math.PI) / 180)) * 0.55);
   escalaSombra = computed(() => 0.45 + 0.55 * Math.abs(Math.cos(((this.angulo() + this.ladeoY()) * Math.PI) / 180)));
 
@@ -149,39 +102,12 @@ export class VisorPrendaComponent {
       this.angulo.set(0);
       this.pista.set(true);
       this.presenta.set(!matchMedia('(prefers-reduced-motion: reduce)').matches);
-      this.girando.set(this.girable() && !matchMedia('(prefers-reduced-motion: reduce)').matches);
-      // precarga la secuencia para que el giro no parpadee
-      this.producto()?.fotos360?.forEach(f => { new Image().src = f; });
     });
-
-    // giro lento automático hasta que el cliente lo toma con el dedo o el mouse
-    effect(onCleanup => {
-      if (!this.girando()) return;
-      const t = setInterval(() => { if (!this.arrastrando()) this.angulo.update(a => a + 1.5 + 3.5 * Math.abs(Math.sin((a * Math.PI) / 180))); }, 50); // lento de frente y de espaldas, rápido por los costados
-      onCleanup(() => clearInterval(t));
-    });
-  }
-
-  private llevarA(destino: number) {
-    cancelAnimationFrame(this.animacion);
-    const desde = this.angulo(), t0 = performance.now();
-    const paso = (t: number) => {
-      const k = Math.min(1, (t - t0) / 380);
-      this.angulo.set(desde + (destino - desde) * (1 - Math.pow(1 - k, 3)));
-      if (k < 1) this.animacion = requestAnimationFrame(paso);
-    };
-    this.animacion = requestAnimationFrame(paso);
-  }
-
-  alternarGiro() {
-    this.pista.set(false);
-    this.girando.update(g => !g);
   }
 
   bajar(e: PointerEvent) {
     if (e.button !== 0) return;
     this.presenta.set(false);
-    cancelAnimationFrame(this.animacion);
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     this.arrastrando.set(true);
     this.inicioX = e.clientX;
@@ -195,12 +121,11 @@ export class VisorPrendaComponent {
     if (this.arrastrando()) {
       const dx = e.clientX - this.inicioX;
       this.movido = Math.max(this.movido, Math.abs(dx));
-      this.angulo.set(this.inicioAngulo + dx * (this.girable() ? 0.8 : 0.6));
-      if (this.girable()) this.girando.set(false);
+      this.angulo.set(this.inicioAngulo + dx * 0.6);
       if (this.movido > 8) this.pista.set(false);
       return;
     }
-    if (e.pointerType !== 'mouse' || this.girable()) return;
+    if (e.pointerType !== 'mouse') return;
     // inclinación como si la prenda colgara frente a ti
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width - 0.5;
@@ -219,9 +144,7 @@ export class VisorPrendaComponent {
       return;
     }
     // termina mirando de frente o de espaldas, lo que quede más cerca
-    if (!this.girable()) this.angulo.set(Math.round(this.angulo() / 180) * 180);
-    // si lo sueltan de costado, se acomoda solo de frente o de espaldas
-    else if (Math.abs(Math.sin((this.angulo() * Math.PI) / 180)) > 0.8) this.llevarA(Math.round(this.angulo() / 180) * 180);
+    this.angulo.set(Math.round(this.angulo() / 180) * 180);
   }
 
   salir() {
@@ -237,18 +160,10 @@ export class VisorPrendaComponent {
   }
 
   fotoActual(p: Producto) {
-    if (this.es360()) return p.fotos360![this.fotoIndice()];
-    if (this.falso()) return p.imagenUrl;
     return this.deEspaldas() ? p.imagenEspaldaUrl : p.imagenUrl;
   }
 
   tecla(e: KeyboardEvent) {
-    if (this.girable() && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-      e.preventDefault();
-      this.girando.set(false);
-      this.angulo.update(a => a + (e.key === 'ArrowRight' ? 15 : -15));
-      return;
-    }
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       this.voltear();

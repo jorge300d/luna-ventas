@@ -11,7 +11,6 @@ export interface Producto {
   color: string;       // color base para la tarjeta cuando no hay foto
   imagenUrl?: string | null;
   imagenEspaldaUrl?: string | null; // foto de la espalda, se ve al voltear
-  fotos360?: string[] | null;       // secuencia de fotos girando la prenda (8 o más) para el visor 360°
   nuevo: boolean;
   stock: number;
   activo?: boolean;

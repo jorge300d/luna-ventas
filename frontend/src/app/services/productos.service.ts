@@ -7,7 +7,7 @@ import { PedidoRequest, Producto } from '../models/producto';
 // las fotos vienen como "/catalogo/x.webp"; sin la barra inicial se resuelven contra el <base href>,
 // así también cargan cuando la web está en un subpath (GitHub Pages: /luna-ventas/)
 const sinBarra = (u?: string | null) => (u && !/^(https?:)?\/\//.test(u) ? u.replace(/^\/+/, '') : u);
-const rutaRelativa = (p: Producto): Producto => ({ ...p, imagenUrl: sinBarra(p.imagenUrl), imagenEspaldaUrl: sinBarra(p.imagenEspaldaUrl), fotos360: p.fotos360?.map(f => sinBarra(f)!) });
+const rutaRelativa = (p: Producto): Producto => ({ ...p, imagenUrl: sinBarra(p.imagenUrl), imagenEspaldaUrl: sinBarra(p.imagenEspaldaUrl) });
 
 @Injectable({ providedIn: 'root' })
 export class ProductosService {
