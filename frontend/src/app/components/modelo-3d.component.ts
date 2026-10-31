@@ -161,7 +161,8 @@ export class Modelo3dComponent {
       }
     }
 
-    // grosor: cada tramo de cada fila es un óvalo (torso, brazos, falda...)
+    // grosor: cada tramo de cada fila es una sección con forma de lente (torso, brazos, falda...).
+    // El borde no llega vertical, así de costado se ve la tela de verdad y no el último píxel estirado
     const z = new Float32Array(n);
     const radio = new Float32Array(n);
     let sumaX = 0, cuenta = 0, ultimaFila = 0;
@@ -174,7 +175,7 @@ export class Modelo3dComponent {
         const medio = (f - i + 1) / 2, centro = (i + f) / 2;
         for (let x = i; x <= f; x++) {
           const dx = x - centro;
-          z[j * gw + x] = PROFUNDIDAD * Math.sqrt(Math.max(0, medio * medio - dx * dx));
+          z[j * gw + x] = PROFUNDIDAD * medio * Math.max(0, 1 - (dx / medio) * (dx / medio));
           radio[j * gw + x] = medio;
           sumaX += x; cuenta++;
         }
@@ -221,37 +222,6 @@ export class Modelo3dComponent {
     }
     for (let k = 0; k < n; k++) if (borde[k]) z[k] = 0;
 
-    // coordenadas de la tela: de frente es la foto exacta; donde el cuerpo dobla hacia el costado
-    // la tela sigue "dando la vuelta" (por largo de arco) en vez de estirar el último píxel del borde
-    const plegar = (v: number, a: number, b: number) => {
-      const L = b - a;
-      if (L <= 0) return a;
-      let t = (v - a) % (2 * L);
-      if (t < 0) t += 2 * L;
-      return a + (t <= L ? t : 2 * L - t);
-    };
-    const columna = new Float32Array(n);
-    for (let k = 0; k < n; k++) columna[k] = k % gw;
-    for (let j = 0; j < gh; j++) {
-      let i = 0;
-      while (i < gw) {
-        if (!dentro[j * gw + i]) { i++; continue; }
-        let f = i;
-        while (f + 1 < gw && dentro[j * gw + f + 1]) f++;
-        const m = Math.round((i + f) / 2);
-        for (const dir of [-1, 1]) {
-          const fin = dir < 0 ? i : f;
-          let cu = m;
-          for (let x = m + dir; dir < 0 ? x >= fin : x <= fin; x += dir) {
-            const dz = z[j * gw + x] - z[j * gw + x - dir];
-            cu += dir * (1 + Math.max(0, Math.hypot(1, dz) - Math.SQRT2));
-            columna[j * gw + x] = plegar(cu, i, f);
-          }
-        }
-        i = f + 1;
-      }
-    }
-
     // malla: cara de adelante con la foto y cara de atrás con la misma tela
     const ancho = (ALTO * img.naturalWidth) / img.naturalHeight;
     const paso = ancho / (gw - 1);
@@ -266,7 +236,7 @@ export class Modelo3dComponent {
         if (zz > grosor) grosor = zz;
         pos[k * 3] = x; pos[k * 3 + 1] = y; pos[k * 3 + 2] = zz;
         pos[(n + k) * 3] = x; pos[(n + k) * 3 + 1] = y; pos[(n + k) * 3 + 2] = -zz;
-        const u = columna[k] / (gw - 1), v = 1 - j / (gh - 1);
+        const u = i / (gw - 1), v = 1 - j / (gh - 1);
         uv[k * 2] = u; uv[k * 2 + 1] = v;
         uv[(n + k) * 2] = u; uv[(n + k) * 2 + 1] = v;
       }
