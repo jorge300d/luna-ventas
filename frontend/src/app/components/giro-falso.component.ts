@@ -74,17 +74,28 @@ export class GiroFalsoComponent {
     const cx = (this.x0 + this.x1) / 2;
     const R = Math.max(1, (this.x1 - this.x0) / 2);
 
-    for (let X = Math.floor(cx - R); X <= Math.ceil(cx + R); X++) {
-      const s = Math.max(-1, Math.min(1, (X - cx) / R));
-      const fi = Math.asin(s);                // ángulo en pantalla (siempre la cara que mira al frente)
-      const t0 = fi - a;                      // ángulo en la prenda antes de girar
+    // sección ovalada: ancho R y grosor D, así de lado no se aplasta hasta cero
+    const D = R * 0.42;
+    const sa = Math.sin(a), ca = Math.cos(a);
+    const A = Math.hypot(R * ca, D * sa);
+    const delta = Math.atan2(D * sa, R * ca);
+    const alcance = Math.ceil(A);
+
+    for (let dx = -alcance; dx <= alcance; dx++) {
+      const X = Math.round(cx) + dx;
+      const q = Math.max(-1, Math.min(1, dx / A));
+      const b = Math.asin(q);
+      // dos puntos de la prenda caen en esta columna: se queda el que mira al frente
+      const c1 = b - delta, c2 = Math.PI - b - delta;
+      const z = (t: number) => -R * Math.sin(t) * sa + D * Math.cos(t) * ca;
+      const t0 = z(c1) >= z(c2) ? c1 : c2;
       const delante = Math.cos(t0) >= 0;
       const sx = cx + R * Math.sin(t0);       // columna de la foto que cae aquí
       g.drawImage(this.img, sx, 0, 1, h, X * this.escala, 0, Math.ceil(this.escala) + 0.5, H);
 
       // sombra: los costados se oscurecen y la parte de atrás es más oscura
-      const lado = 1 - Math.cos(fi);
-      const sombra = Math.min(0.75, lado * 0.45 + (delante ? 0 : 0.28));
+      const lado = 1 - Math.sqrt(1 - q * q);
+      const sombra = Math.min(0.75, lado * 0.5 + (delante ? 0 : 0.28));
       if (sombra > 0.01) {
         g.globalCompositeOperation = 'source-atop';
         g.fillStyle = `rgba(48,28,52,${sombra})`;
