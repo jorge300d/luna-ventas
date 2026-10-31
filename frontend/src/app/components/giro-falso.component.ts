@@ -1,7 +1,7 @@
 import { Component, ElementRef, effect, input, signal, viewChild } from '@angular/core';
 
 // 360° simulado a partir de UNA sola foto (fondo transparente):
-// la prenda se envuelve en un cilindro y se redibuja columna por columna al girar.
+// la prenda se redibuja columna por columna como una pieza plana que gira con perspectiva.
 // Al pasar de los 90° se ve la parte de atrás, que es la misma foto más oscura (es una aproximación).
 @Component({
   selector: 'app-giro-falso',
@@ -70,36 +70,28 @@ export class GiroFalsoComponent {
     const g = cv.getContext('2d')!;
     g.clearRect(0, 0, W, H);
 
+    // la prenda gira como una pieza plana con perspectiva: el lado que se acerca se ve más alto
+    // pasados los 90° se ve el revés (la misma foto espejada y más oscura)
     const a = (grados * Math.PI) / 180;
     const cx = (this.x0 + this.x1) / 2;
     const R = Math.max(1, (this.x1 - this.x0) / 2);
-
-    // sección ovalada: ancho R y grosor D, así de lado no se aplasta hasta cero
-    const D = R * 0.8;
     const sa = Math.sin(a), ca = Math.cos(a);
-    const A = Math.hypot(R * ca, D * sa);
-    const delta = Math.atan2(D * sa, R * ca);
-    const alcance = Math.ceil(A);
+    const c = (ca < 0 ? -1 : 1) * Math.max(0.14, Math.abs(ca)); // nunca se aplasta del todo
+    const detras = ca < 0;
+    const ancho = Math.ceil(this.escala) + 0.5;
 
-    for (let dx = -alcance; dx <= alcance; dx++) {
+    for (let dx = Math.floor(-R * Math.abs(c)); dx <= Math.ceil(R * Math.abs(c)); dx++) {
+      const sx = cx + dx / c;                 // columna de la foto que cae aquí (espejada si c < 0)
+      const lado = (dx / (R * Math.abs(c))) * Math.sign(sa || 1); // -1..1: el extremo que se acerca es +1
+      const k = 1 + 0.09 * Math.abs(sa) * lado;
       const X = Math.round(cx) + dx;
-      const q = Math.max(-1, Math.min(1, dx / A));
-      const b = Math.asin(q);
-      // dos puntos de la prenda caen en esta columna: se queda el que mira al frente
-      const c1 = b - delta, c2 = Math.PI - b - delta;
-      const z = (t: number) => -R * Math.sin(t) * sa + D * Math.cos(t) * ca;
-      const t0 = z(c1) >= z(c2) ? c1 : c2;
-      const delante = Math.cos(t0) >= 0;
-      const sx = cx + R * Math.sin(t0);       // columna de la foto que cae aquí
-      g.drawImage(this.img, sx, 0, 1, h, X * this.escala, 0, Math.ceil(this.escala) + 0.5, H);
+      g.drawImage(this.img, sx, 0, 1, h, X * this.escala, H - H * k, ancho, H * k);
 
-      // sombra: los costados se oscurecen y la parte de atrás es más oscura
-      const lado = 1 - Math.sqrt(1 - q * q);
-      const sombra = Math.min(0.75, lado * 0.5 + (delante ? 0 : 0.28));
+      const sombra = Math.min(0.7, 0.32 * Math.abs(sa) * (0.6 - 0.4 * lado) + (detras ? 0.26 : 0));
       if (sombra > 0.01) {
         g.globalCompositeOperation = 'source-atop';
         g.fillStyle = `rgba(48,28,52,${sombra})`;
-        g.fillRect(X * this.escala, 0, Math.ceil(this.escala) + 0.5, H);
+        g.fillRect(X * this.escala, 0, ancho, H);
         g.globalCompositeOperation = 'source-over';
       }
     }
