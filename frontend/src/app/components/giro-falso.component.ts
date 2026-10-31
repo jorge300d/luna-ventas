@@ -76,7 +76,7 @@ export class GiroFalsoComponent {
     const cx = (this.x0 + this.x1) / 2;
     const R = Math.max(1, (this.x1 - this.x0) / 2);
     const sa = Math.sin(a), ca = Math.cos(a);
-    const c = (ca < 0 ? -1 : 1) * Math.max(0.14, Math.abs(ca)); // nunca se aplasta del todo
+    const c = (ca < 0 ? -1 : 1) * Math.max(0.3, Math.abs(ca)); // nunca se aplasta del todo
     const detras = ca < 0;
     const ancho = Math.ceil(this.escala) + 0.5;
 
