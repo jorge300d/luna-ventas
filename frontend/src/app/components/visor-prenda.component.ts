@@ -1,6 +1,7 @@
 import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { Producto } from '../models/producto';
 import { GiroFalsoComponent } from './giro-falso.component';
+import { Modelo3dComponent } from './modelo-3d.component';
 import { linkWhatsapp } from '../site.config';
 
 // visor de la prenda: se inclina con el mouse, gira al arrastrar y se puede voltear
@@ -8,7 +9,7 @@ import { linkWhatsapp } from '../site.config';
 @Component({
   selector: 'app-visor-prenda',
   standalone: true,
-  imports: [GiroFalsoComponent],
+  imports: [GiroFalsoComponent, Modelo3dComponent],
   template: `
     @if (producto(); as p) {
       <div class="escena estudio"
@@ -24,7 +25,11 @@ import { linkWhatsapp } from '../site.config';
             @if (es360()) {
               <img [src]="fotoActual(p)" [alt]="p.nombre + ', vista ' + (fotoIndice() + 1) + ' de ' + p.fotos360!.length" draggable="false" />
             } @else {
-              <app-giro-falso [src]="p.imagenUrl!" [alt]="p.nombre" [angulo]="angulo()" />
+              @if (es3d()) {
+                <app-modelo-3d [producto]="p" [angulo]="angulo()" (falla)="modelo.set(false)" />
+              } @else {
+                <app-giro-falso [src]="p.imagenUrl!" [alt]="p.nombre" [angulo]="angulo()" />
+              }
             }
           </div>
           <span class="sello360" aria-hidden="true">360°</span>
@@ -75,6 +80,12 @@ import { linkWhatsapp } from '../site.config';
           {{ deEspaldas() ? 'Ver frente' : 'Voltear' }}
         </button>
         }
+        @if (conModelo()) {
+          <button type="button" (click)="modelo.set(!modelo())" [attr.aria-pressed]="modelo()">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="6" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 21l1.5-9h3L15 21M8 11l4-2 4 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            {{ modelo() ? 'Ver foto' : 'Ver en modelo' }}
+          </button>
+        }
         <button type="button" (click)="ampliar.emit(fotoActual(p)!)" [disabled]="!fotoActual(p)">
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4M8 11h6M11 8v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           Zoom
@@ -117,6 +128,9 @@ export class VisorPrendaComponent {
   es360 = computed(() => (this.producto()?.fotos360?.length ?? 0) >= 8);
   falso = computed(() => !this.es360() && !!this.producto()?.imagenUrl && !this.producto()?.imagenEspaldaUrl); // un 360° simulado desde una sola foto
   girable = computed(() => this.es360() || this.falso());
+  modelo = signal(true);   // modelo 3D con el vestido puesto; si no carga o se apaga, queda la foto
+  conModelo = computed(() => this.falso() && this.producto()?.categoria === 'vestidos');
+  es3d = computed(() => this.conModelo() && this.modelo());
   fotoIndice = computed(() => {
     const n = this.producto()?.fotos360?.length ?? 1;
     const a = ((this.angulo() % 360) + 360) % 360;
