@@ -33,6 +33,7 @@ import { linkWhatsapp } from '../site.config';
             }
           </div>
           <span class="sello360" aria-hidden="true">360°</span>
+          @if (es3d()) { <span class="vista" [class.atras]="deEspaldas()">{{ deEspaldas() ? 'Espalda recreada' : 'Frente real' }}</span> }
         } @else {
         <div class="giro" [class.presenta]="presenta()" [style.transform]="transformacion()">
           <div class="cara frente">
@@ -110,6 +111,7 @@ export class VisorPrendaComponent {
   private inicioX = 0;
   private inicioAngulo = 0;
   private movido = 0;
+  private animacion = 0;
 
   deEspaldas = computed(() => {
     const a = ((this.angulo() % 360) + 360) % 360;
@@ -155,9 +157,20 @@ export class VisorPrendaComponent {
     // giro lento automático hasta que el cliente lo toma con el dedo o el mouse
     effect(onCleanup => {
       if (!this.girando()) return;
-      const t = setInterval(() => { if (!this.arrastrando()) this.angulo.update(a => a + 2.5); }, 50);
+      const t = setInterval(() => { if (!this.arrastrando()) this.angulo.update(a => a + 1.5 + 3.5 * Math.abs(Math.sin((a * Math.PI) / 180))); }, 50); // lento de frente y de espaldas, rápido por los costados
       onCleanup(() => clearInterval(t));
     });
+  }
+
+  private llevarA(destino: number) {
+    cancelAnimationFrame(this.animacion);
+    const desde = this.angulo(), t0 = performance.now();
+    const paso = (t: number) => {
+      const k = Math.min(1, (t - t0) / 380);
+      this.angulo.set(desde + (destino - desde) * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) this.animacion = requestAnimationFrame(paso);
+    };
+    this.animacion = requestAnimationFrame(paso);
   }
 
   alternarGiro() {
@@ -168,6 +181,7 @@ export class VisorPrendaComponent {
   bajar(e: PointerEvent) {
     if (e.button !== 0) return;
     this.presenta.set(false);
+    cancelAnimationFrame(this.animacion);
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     this.arrastrando.set(true);
     this.inicioX = e.clientX;
@@ -206,6 +220,8 @@ export class VisorPrendaComponent {
     }
     // termina mirando de frente o de espaldas, lo que quede más cerca
     if (!this.girable()) this.angulo.set(Math.round(this.angulo() / 180) * 180);
+    // si lo sueltan de costado, se acomoda solo de frente o de espaldas
+    else if (Math.abs(Math.sin((this.angulo() * Math.PI) / 180)) > 0.8) this.llevarA(Math.round(this.angulo() / 180) * 180);
   }
 
   salir() {
