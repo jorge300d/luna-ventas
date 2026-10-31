@@ -148,7 +148,18 @@ export class Modelo3dComponent {
     const alfa = g.getImageData(0, 0, gw, gh).data;
     const n = gw * gh;
     const dentro = new Uint8Array(n);
-    for (let k = 0; k < n; k++) dentro[k] = alfa[k * 4 + 3] > 110 ? 1 : 0;
+    // solo la parte bien opaca: el borde suave de la foto se estiraría al girar
+    for (let k = 0; k < n; k++) dentro[k] = alfa[k * 4 + 3] > 170 ? 1 : 0;
+    // contorno: puntos de la prenda que tocan el fondo; ahí se cierra el volumen (grosor 0)
+    const borde = new Uint8Array(n);
+    for (let j = 0; j < gh; j++) {
+      for (let i = 0; i < gw; i++) {
+        const k = j * gw + i;
+        if (!dentro[k]) continue;
+        if (i === 0 || j === 0 || i === gw - 1 || j === gh - 1 ||
+          !dentro[k - 1] || !dentro[k + 1] || !dentro[k - gw] || !dentro[k + gw]) borde[k] = 1;
+      }
+    }
 
     // grosor: cada tramo de cada fila es un óvalo (torso, brazos, falda...)
     const z = new Float32Array(n);
@@ -208,6 +219,7 @@ export class Modelo3dComponent {
         }
       }
     }
+    for (let k = 0; k < n; k++) if (borde[k]) z[k] = 0;
 
     // malla: cara de adelante con la foto y cara de atrás con la misma tela
     const ancho = (ALTO * img.naturalWidth) / img.naturalHeight;
@@ -232,7 +244,7 @@ export class Modelo3dComponent {
     for (let j = 0; j < gh - 1; j++) {
       for (let i = 0; i < gw - 1; i++) {
         const a = j * gw + i, b = a + 1, cc = a + gw, d = cc + 1;
-        if (!(dentro[a] || dentro[b] || dentro[cc] || dentro[d])) continue;
+        if (!(dentro[a] && dentro[b] && dentro[cc] && dentro[d])) continue; // solo celdas dentro de la prenda
         frente.push(a, cc, b, b, cc, d);
         atras.push(n + a, n + b, n + cc, n + b, n + d, n + cc);
       }
