@@ -75,7 +75,7 @@ export class GiroFalsoComponent {
     const R = Math.max(1, (this.x1 - this.x0) / 2);
 
     // sección ovalada: ancho R y grosor D, así de lado no se aplasta hasta cero
-    const D = R * 0.42;
+    const D = R * 0.8;
     const sa = Math.sin(a), ca = Math.cos(a);
     const A = Math.hypot(R * ca, D * sa);
     const delta = Math.atan2(D * sa, R * ca);
